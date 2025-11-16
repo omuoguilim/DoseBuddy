@@ -1,10 +1,5 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'medication.dart';
-
-// **************************************************************************
-// TypeAdapterGenerator
-// **************************************************************************
 
 class MedicationAdapter extends TypeAdapter<Medication> {
   @override
@@ -29,13 +24,21 @@ class MedicationAdapter extends TypeAdapter<Medication> {
       sideEffects: (fields[9] as List?)
           ?.map((dynamic e) => (e as Map).cast<String, dynamic>())
           ?.toList(),
+      takenLog: (fields[10] as List?)
+          ?.map((dynamic e) => (e as Map).cast<String, dynamic>())
+          ?.toList(),
+      totalPills: fields[11] as int?,
+      pillsRemaining: fields[12] as int?,
+      refillThreshold: fields[13] as int?,
+      lastRefillDate: fields[14] as DateTime?,
+      pillsPerDose: fields[15] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, Medication obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(16)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -55,7 +58,19 @@ class MedicationAdapter extends TypeAdapter<Medication> {
       ..writeByte(8)
       ..write(obj.createdAt)
       ..writeByte(9)
-      ..write(obj.sideEffects);
+      ..write(obj.sideEffects)
+      ..writeByte(10)
+      ..write(obj.takenLog)
+      ..writeByte(11)
+      ..write(obj.totalPills)
+      ..writeByte(12)
+      ..write(obj.pillsRemaining)
+      ..writeByte(13)
+      ..write(obj.refillThreshold)
+      ..writeByte(14)
+      ..write(obj.lastRefillDate)
+      ..writeByte(15)
+      ..write(obj.pillsPerDose);
   }
 
   @override

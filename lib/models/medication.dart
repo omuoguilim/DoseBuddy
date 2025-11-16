@@ -34,20 +34,43 @@ class Medication extends HiveObject {
   @HiveField(9)
   List<Map<String, dynamic>>? sideEffects;
 
-  Medication({
-  required this.id,
-  required this.name,
-  required this.dosage,
-  required this.times,
-  this.notes = '',
-  this.status = 'upcoming',
-  this.lastTaken,
-  this.gracePeriodMinutes = 30,
-  DateTime? createdAt,
-  this.sideEffects,
-}) : createdAt = createdAt ?? DateTime.now();
+  @HiveField(10)
+  List<Map<String, dynamic>>? takenLog;
 
-  // Helper method to check if medication is overdue
+  @HiveField(11)
+  int? totalPills;
+
+  @HiveField(12)
+  int? pillsRemaining;
+
+  @HiveField(13)
+  int? refillThreshold;
+
+  @HiveField(14)
+  DateTime? lastRefillDate;
+
+  @HiveField(15)
+  int pillsPerDose; //How many pills to take each time 
+
+  Medication({
+    required this.id,
+    required this.name,
+    required this.dosage,
+    required this.times,
+    this.notes = '',
+    this.status = 'upcoming',
+    this.lastTaken,
+    this.gracePeriodMinutes = 30,
+    DateTime? createdAt,
+    this.sideEffects,
+    this.takenLog,
+    this.totalPills,
+    this.pillsRemaining,
+    this.refillThreshold,
+    this.lastRefillDate,
+    this.pillsPerDose = 1, //1 pill per dose
+  }) : createdAt = createdAt ?? DateTime.now();
+
   bool isOverdue(String scheduleTime) {
     final now = DateTime.now();
     final scheduledDateTime = _parseTimeToDateTime(scheduleTime);
@@ -56,8 +79,8 @@ class Medication extends HiveObject {
     return now.isAfter(graceEndTime);
   }
 
-  DateTime _parseTimeToDateTime(String timeStr) {
-    final now = DateTime.now();
+  DateTime _parseTimeToDateTime(String timeStr, {DateTime? forDate}) {
+    final referenceDate = forDate ?? DateTime.now();
     final parts = timeStr.split(' ');
     final timeParts = parts[0].split(':');
     int hour = int.parse(timeParts[0]);
@@ -67,7 +90,7 @@ class Medication extends HiveObject {
     if (isPM && hour != 12) hour += 12;
     if (!isPM && hour == 12) hour = 0;
 
-    return DateTime(now.year, now.month, now.day, hour, minute);
+    return DateTime(referenceDate.year, referenceDate.month, referenceDate.day, hour, minute);
   }
 
   String? getNextScheduledTime() {
@@ -83,41 +106,131 @@ class Medication extends HiveObject {
     return times.isNotEmpty ? times.first : null;
   }
 
-  // Check if we're in the grace period for a specific time
-bool isInGracePeriod(String scheduleTime) {
-  final now = DateTime.now();
-  final scheduledDateTime = _parseTimeToDateTime(scheduleTime);
-  final graceEndTime = scheduledDateTime.add(Duration(minutes: gracePeriodMinutes));
-  
-  return now.isAfter(scheduledDateTime) && now.isBefore(graceEndTime);
-}
+  bool isInGracePeriod(String scheduleTime) {
+    final now = DateTime.now();
+    final scheduledDateTime = _parseTimeToDateTime(scheduleTime);
+    final graceEndTime = scheduledDateTime.add(Duration(minutes: gracePeriodMinutes));
+    
+    return now.isAfter(scheduledDateTime) && now.isBefore(graceEndTime);
+  }
 
-// Get current status for a specific scheduled time
-String getStatusForTime(String scheduleTime) {
-  final now = DateTime.now();
-  final scheduledDateTime = _parseTimeToDateTime(scheduleTime);
-  final graceEndTime = scheduledDateTime.add(Duration(minutes: gracePeriodMinutes));
-  
-  if (now.isBefore(scheduledDateTime)) {
-    return 'upcoming';
-  } else if (now.isBefore(graceEndTime)) {
-    return 'grace_period'; // In grace period window
-  } else {
-    // Check if it was taken
-    if (lastTaken != null) {
-      final takenTime = lastTaken!;
-      final takenDateTime = DateTime(
-        now.year, now.month, now.day,
-        takenTime.hour, takenTime.minute
-      );
-      
-      // If taken within grace period
-      if (takenDateTime.isAfter(scheduledDateTime) && 
-          takenDateTime.isBefore(graceEndTime)) {
-        return 'taken';
+  String getStatusForTime(String scheduleTime) {
+    final now = DateTime.now();
+    final scheduledDateTime = _parseTimeToDateTime(scheduleTime);
+    final graceEndTime = scheduledDateTime.add(Duration(minutes: gracePeriodMinutes));
+    
+    if (now.isBefore(scheduledDateTime)) {
+      return 'upcoming';
+    } else if (now.isBefore(graceEndTime)) {
+      return 'grace_period';
+    } else {
+      if (lastTaken != null) {
+        final takenTime = lastTaken!;
+        final takenDateTime = DateTime(
+          now.year, now.month, now.day,
+          takenTime.hour, takenTime.minute
+        );
+        
+        if (takenDateTime.isAfter(scheduledDateTime) && 
+            takenDateTime.isBefore(graceEndTime)) {
+          return 'taken';
+        }
+      }
+      return 'missed';
+    }
+  }
+
+  bool wasTakenOn(DateTime date, String scheduledTime) {
+    if (takenLog == null || takenLog!.isEmpty) return false;
+    
+    final dateStr = _formatDate(date);
+    
+    for (var log in takenLog!) {
+      if (log['date'] == dateStr && log['scheduledTime'] == scheduledTime) {
+        return true;
       }
     }
-    return 'missed';
+    return false;
   }
-}
+
+  String getStatusForDateTime(DateTime date, String scheduledTime) {
+    final now = DateTime.now();
+    final scheduledDateTime = _parseTimeToDateTime(scheduledTime, forDate: date);
+    final graceEndTime = scheduledDateTime.add(Duration(minutes: gracePeriodMinutes));
+    
+    final isPast = now.isAfter(graceEndTime);
+    
+    if (wasTakenOn(date, scheduledTime)) {
+      return 'taken';
+    }
+    
+    if (isPast) {
+      return 'missed';
+    }
+    
+    if (now.isAfter(scheduledDateTime) && now.isBefore(graceEndTime)) {
+      return 'grace_period';
+    }
+    
+    return 'upcoming';
+  }
+
+  //ark as taken and reduce pill count by pillsPerDose
+  void markAsTakenOn(DateTime date, String scheduledTime) {
+    takenLog ??= [];
+    
+    final dateStr = _formatDate(date);
+    
+    final exists = takenLog!.any(
+      (log) => log['date'] == dateStr && log['scheduledTime'] == scheduledTime
+    );
+    
+    if (!exists) {
+      takenLog!.add({
+        'date': dateStr,
+        'scheduledTime': scheduledTime,
+        'takenAt': DateTime.now().toIso8601String(),
+      });
+      
+      //ecrement pill count by pillsPerDose (not just 1)
+      if (pillsRemaining != null && pillsRemaining! > 0) {
+        pillsRemaining = pillsRemaining! - pillsPerDose;
+        if (pillsRemaining! < 0) pillsRemaining = 0; // Don't go negative
+      }
+    }
+    
+    lastTaken = DateTime.now();
+    status = 'taken';
+  }
+
+  bool isScheduledFor(DateTime date) {
+    final createdDate = DateTime(createdAt.year, createdAt.month, createdAt.day);
+    final checkDate = DateTime(date.year, date.month, date.day);
+    
+    return checkDate.isAfter(createdDate.subtract(const Duration(days: 1))) || 
+           checkDate.isAtSameMomentAs(createdDate);
+  }
+
+  bool needsRefill() {
+    if (pillsRemaining == null || refillThreshold == null) return false;
+    return pillsRemaining! <= refillThreshold!;
+  }
+
+  //alculates days until out considering pillsPerDose
+  int? daysUntilOut() {
+    if (pillsRemaining == null || times.isEmpty) return null;
+    final pillsPerDay = times.length * pillsPerDose; // Total pills consumed per day
+    if (pillsPerDay == 0) return null;
+    return (pillsRemaining! / pillsPerDay).floor();
+  }
+
+  void refill(int newPillCount) {
+    pillsRemaining = newPillCount;
+    totalPills = newPillCount;
+    lastRefillDate = DateTime.now();
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
 }

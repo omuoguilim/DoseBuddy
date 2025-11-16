@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'mainscreen.dart';
 
 class LoginPage extends StatefulWidget {
@@ -14,8 +15,6 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
 
   void _login() {
-    // Mock login - just navigate to main screen
-    // For hackathon, we'll accept any email/password
     if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
       Navigator.pushReplacement(
         context,
@@ -43,18 +42,27 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               const SizedBox(height: 40),
               
-              // Logo/Icon
+              //Logo/Icon - Updated with pill bottle
               Center(
                 child: Container(
-                  padding: const EdgeInsets.all(20),
+                  width: 100,
+                  height: 100,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF5B67CA).withOpacity(0.1),
+                    color: Colors.white,
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF5B67CA).withValues(alpha: 0.2),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
-                  child: const Icon(
-                    Icons.medication_rounded,
-                    size: 60,
-                    color: Color(0xFF5B67CA),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: SvgPicture.asset(
+                      'assets/images/pill_bottle_logo.svg',
+                    ),
                   ),
                 ),
               ),
@@ -192,25 +200,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
               
               const SizedBox(height: 24),
-              
-              // Demo hint
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF5B67CA).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    '💡 Demo: Enter any email and password',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF5B67CA),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
             ],
           ),
         ),

@@ -3,8 +3,15 @@ import '../models/medication.dart';
 
 class SideEffectsDialog extends StatefulWidget {
   final Medication medication;
+  final DateTime? takenDate;
+  final String? takenTime;
 
-  const SideEffectsDialog({super.key, required this.medication});
+  const SideEffectsDialog({
+    super.key, 
+    required this.medication,
+    this.takenDate,
+    this.takenTime,
+  });
 
   @override
   State<SideEffectsDialog> createState() => _SideEffectsDialogState();
@@ -26,14 +33,16 @@ class _SideEffectsDialogState extends State<SideEffectsDialog> {
   final TextEditingController _notesController = TextEditingController();
 
   void _submit() {
-    // Create side effect log
+    //Creates side effect log
     final log = {
       'timestamp': DateTime.now().toIso8601String(),
+      'takenDate': widget.takenDate?.toIso8601String() ?? DateTime.now().toIso8601String(),
+      'takenTime': widget.takenTime ?? 'Unknown',
       'effects': _selectedEffects.toList(),
       'notes': _notesController.text,
     };
 
-    // Add to medication's side effects list
+    //Adds to medication's side effects list
     widget.medication.sideEffects ??= [];
     widget.medication.sideEffects!.add(log);
     widget.medication.save();
@@ -59,7 +68,7 @@ class _SideEffectsDialogState extends State<SideEffectsDialog> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF5B67CA).withOpacity(0.1),
+                      color: const Color(0xFF5B67CA).withAlpha(26),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -83,7 +92,7 @@ class _SideEffectsDialogState extends State<SideEffectsDialog> {
               ),
               const SizedBox(height: 8),
               Text(
-                'After taking ${widget.medication.name}',
+                'After taking ${widget.medication.name}${widget.takenTime != null ? ' at ${widget.takenTime}' : ''}',
                 style: const TextStyle(
                   fontSize: 14,
                   color: Color(0xFF718096),
@@ -123,7 +132,7 @@ class _SideEffectsDialogState extends State<SideEffectsDialog> {
                       });
                     },
                     backgroundColor: Colors.grey[100],
-                    selectedColor: const Color(0xFF5B67CA).withOpacity(0.2),
+                    selectedColor: const Color(0xFF5B67CA).withAlpha(51),
                     checkmarkColor: const Color(0xFF5B67CA),
                     labelStyle: TextStyle(
                       color: isSelected ? const Color(0xFF5B67CA) : Colors.grey[700],

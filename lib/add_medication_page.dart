@@ -14,10 +14,13 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
   final _nameController = TextEditingController();
   final _dosageController = TextEditingController();
   final _notesController = TextEditingController();
+  final _totalPillsController = TextEditingController();
+  final _refillThresholdController = TextEditingController();
   final List<String> _selectedTimes = [];
+  bool _trackRefills = false;
 
   Future<void> _scanPrescription() async {
-    // Show scanning animation
+    //Shows scanning animation
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -43,22 +46,25 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
       ),
     );
 
-    // Simulate scanning delay
+    //scanning delay
     await Future.delayed(const Duration(seconds: 2));
 
-    // Close loading dialog
+    //Close loading dialog
     if (mounted) Navigator.pop(context);
 
-    // Auto-fill with demo data
+    //Auto-fills with default data
     setState(() {
       _nameController.text = 'Amoxicillin';
       _dosageController.text = '500mg';
       _notesController.text = 'Take with food. Complete full course.';
       _selectedTimes.clear();
       _selectedTimes.addAll(['8:00 AM', '2:00 PM', '8:00 PM']);
+      _trackRefills = true;
+      _totalPillsController.text = '30';
+      _refillThresholdController.text = '10';
     });
 
-    // Show success message
+    //Show success message
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -125,7 +131,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
   }
 
   Future<void> _saveMedication() async {
-    print('🔘 Save button tapped!');
+    print('📘 Save button tapped!');
     print('Name: ${_nameController.text}');
     print('Dosage: ${_dosageController.text}');
     print('Times: $_selectedTimes');
@@ -140,12 +146,29 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
       return;
     }
 
+    //Parse refill tracking
+    int? totalPills;
+    int? refillThreshold;
+    
+    if (_trackRefills && _totalPillsController.text.isNotEmpty) {
+      totalPills = int.tryParse(_totalPillsController.text);
+      if (_refillThresholdController.text.isNotEmpty) {
+        refillThreshold = int.tryParse(_refillThresholdController.text);
+      } else {
+        refillThreshold = (totalPills! * 0.25).round(); // Default: 25% of total
+      }
+    }
+
     final medication = Medication(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: _nameController.text,
       dosage: _dosageController.text,
       times: _selectedTimes,
       notes: _notesController.text,
+      totalPills: totalPills,
+      pillsRemaining: totalPills, // Start with full bottle
+      refillThreshold: refillThreshold,
+      lastRefillDate: totalPills != null ? DateTime.now() : null,
     );
 
     final box = Hive.box<Medication>('medications');
@@ -176,7 +199,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Scanner Button
+            //Scanner Button
             GestureDetector(
               onTap: _scanPrescription,
               child: Container(
@@ -192,7 +215,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF5B67CA).withOpacity(0.3),
+                      color: Color(0xFF5B67CA).withAlpha(77),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -218,7 +241,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
             
             const SizedBox(height: 24),
             
-            // Divider with "OR"
+            //Divider 
             Row(
               children: [
                 Expanded(child: Divider(color: Colors.grey[300])),
@@ -239,7 +262,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
             
             const SizedBox(height: 24),
             
-            // Medication Name
+            //Medication Name
             const Text(
               'Medication Name *',
               style: TextStyle(
@@ -272,7 +295,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
 
             const SizedBox(height: 20),
 
-            // Dosage
+            //Dosage
             const Text(
               'Dosage *',
               style: TextStyle(
@@ -305,7 +328,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
 
             const SizedBox(height: 20),
 
-            // Times
+            //Times
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -353,7 +376,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                     label: Text(time),
                     deleteIcon: const Icon(Icons.close, size: 18),
                     onDeleted: () => _removeTime(time),
-                    backgroundColor: const Color(0xFF5B67CA).withOpacity(0.1),
+                    backgroundColor: Color(0xFF5B67CA).withAlpha(26),
                     labelStyle: const TextStyle(
                       color: Color(0xFF5B67CA),
                       fontWeight: FontWeight.w600,
@@ -364,7 +387,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
 
             const SizedBox(height: 20),
 
-            // Notes
+            //Notes
             const Text(
               'Notes (Optional)',
               style: TextStyle(
@@ -396,9 +419,135 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
               ),
             ),
 
+            const SizedBox(height: 24),
+
+            //Refill Tracking Section
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.orange.withAlpha(13),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: _trackRefills ? Colors.orange : Colors.grey[300]!,
+                  width: 2,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.inventory_2,
+                        color: _trackRefills ? Colors.orange : Colors.grey,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'Track Refills',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1A1D2E),
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Get alerts when running low',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF718096),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch(
+                        value: _trackRefills,
+                        onChanged: (value) {
+                          setState(() {
+                            _trackRefills = value;
+                          });
+                        },
+                        activeThumbColor: Colors.orange,
+                      ),
+                    ],
+                  ),
+                  
+                  if (_trackRefills) ...[
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Total Pills in Bottle',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1A1D2E),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _totalPillsController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        hintText: 'e.g., 30',
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[200]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.orange, width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Alert When Below (Optional)',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1A1D2E),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _refillThresholdController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        hintText: 'e.g., 10 (leave empty for 25% of total)',
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[200]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.orange, width: 2),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
             const SizedBox(height: 32),
 
-            // Save button
+            //save button
             SizedBox(
               width: double.infinity,
               height: 56,
@@ -410,6 +559,8 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                 ),
               ),
             ),
+            
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -421,6 +572,8 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
     _nameController.dispose();
     _dosageController.dispose();
     _notesController.dispose();
+    _totalPillsController.dispose();
+    _refillThresholdController.dispose();
     super.dispose();
   }
 }

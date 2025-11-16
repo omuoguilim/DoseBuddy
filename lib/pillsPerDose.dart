@@ -3,41 +3,79 @@ import 'package:hive/hive.dart';
 import 'models/medication.dart';
 import 'services/notification_services.dart';
 
-class EditMedicationPage extends StatefulWidget {
-  final Medication medication;
-
-  const EditMedicationPage({super.key, required this.medication});
+class AddMedicationPage extends StatefulWidget {
+  const AddMedicationPage({super.key});
 
   @override
-  State<EditMedicationPage> createState() => _EditMedicationPageState();
+  State<AddMedicationPage> createState() => _AddMedicationPageState();
 }
 
-class _EditMedicationPageState extends State<EditMedicationPage> {
-  late TextEditingController _nameController;
-  late TextEditingController _dosageController;
-  late TextEditingController _notesController;
-  late TextEditingController _totalPillsController;
-  late TextEditingController _refillThresholdController;
-  late List<String> _selectedTimes;
-  late bool _trackRefills;
+class _AddMedicationPageState extends State<AddMedicationPage> {
+  final _nameController = TextEditingController();
+  final _dosageController = TextEditingController();
+  final _notesController = TextEditingController();
+  final _totalPillsController = TextEditingController();
+  final _refillThresholdController = TextEditingController();
+  final _pillsPerDoseController = TextEditingController(text: '1'); // NEW
+  final List<String> _selectedTimes = [];
+  bool _trackRefills = false;
 
-  @override
-  void initState() {
-    super.initState();
-    // Pre-fill with existing data
-    _nameController = TextEditingController(text: widget.medication.name);
-    _dosageController = TextEditingController(text: widget.medication.dosage);
-    _notesController = TextEditingController(text: widget.medication.notes);
-    _selectedTimes = List.from(widget.medication.times);
-    
-    // Refill tracking
-    _trackRefills = widget.medication.totalPills != null;
-    _totalPillsController = TextEditingController(
-      text: widget.medication.totalPills?.toString() ?? '',
+  Future<void> _scanPrescription() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: Container(
+          padding: const EdgeInsets.all(40),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              CircularProgressIndicator(),
+              SizedBox(height: 20),
+              Text(
+                'Scanning prescription...',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
-    _refillThresholdController = TextEditingController(
-      text: widget.medication.refillThreshold?.toString() ?? '',
-    );
+
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (mounted) Navigator.pop(context);
+
+    setState(() {
+      _nameController.text = 'Amoxicillin';
+      _dosageController.text = '500mg';
+      _notesController.text = 'Take with food. Complete full course.';
+      _selectedTimes.clear();
+      _selectedTimes.addAll(['8:00 AM', '2:00 PM', '8:00 PM']);
+      _trackRefills = true;
+      _totalPillsController.text = '30';
+      _refillThresholdController.text = '10';
+      _pillsPerDoseController.text = '2'; // Demo: 2 pills per dose
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text('Prescription scanned successfully!'),
+            ],
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
   Future<void> _addTime() async {
@@ -89,70 +127,7 @@ class _EditMedicationPageState extends State<EditMedicationPage> {
     });
   }
 
-  Future<void> _showRefillDialog() async {
-    final controller = TextEditingController(
-      text: widget.medication.totalPills?.toString() ?? '',
-    );
-
-    final newCount = await showDialog<int>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Refill Medication'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('How many pills are in the new bottle?'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: 'e.g., 30',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                prefixIcon: const Icon(Icons.inventory_2),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final count = int.tryParse(controller.text);
-              Navigator.pop(context, count);
-            },
-            child: const Text('Refill'),
-          ),
-        ],
-      ),
-    );
-
-    if (newCount != null && newCount > 0) {
-      setState(() {
-        widget.medication.refill(newCount);
-        _totalPillsController.text = newCount.toString();
-      });
-      await widget.medication.save();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('✅ Refilled with $newCount pills'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _updateMedication() async {
+  Future<void> _saveMedication() async {
     if (_nameController.text.isEmpty || _dosageController.text.isEmpty || _selectedTimes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -163,21 +138,16 @@ class _EditMedicationPageState extends State<EditMedicationPage> {
       return;
     }
 
-    // Parse refill tracking
+    //Parse pills per dose
+    int pillsPerDose = int.tryParse(_pillsPerDoseController.text) ?? 1;
+    if (pillsPerDose < 1) pillsPerDose = 1;
+
+    //Parse refill tracking
     int? totalPills;
-    int? pillsRemaining;
     int? refillThreshold;
     
     if (_trackRefills && _totalPillsController.text.isNotEmpty) {
       totalPills = int.tryParse(_totalPillsController.text);
-      
-      // Keep existing pills remaining if already tracking, otherwise set to total
-      if (widget.medication.pillsRemaining != null) {
-        pillsRemaining = widget.medication.pillsRemaining;
-      } else {
-        pillsRemaining = totalPills;
-      }
-      
       if (_refillThresholdController.text.isNotEmpty) {
         refillThreshold = int.tryParse(_refillThresholdController.text);
       } else {
@@ -185,24 +155,28 @@ class _EditMedicationPageState extends State<EditMedicationPage> {
       }
     }
 
-    // Update the medication object
-    widget.medication.name = _nameController.text;
-    widget.medication.dosage = _dosageController.text;
-    widget.medication.times = _selectedTimes;
-    widget.medication.notes = _notesController.text;
-    widget.medication.totalPills = totalPills;
-    widget.medication.pillsRemaining = pillsRemaining;
-    widget.medication.refillThreshold = refillThreshold;
-    
-    // Save to Hive
-    await widget.medication.save();
+    final medication = Medication(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: _nameController.text,
+      dosage: _dosageController.text,
+      times: _selectedTimes,
+      notes: _notesController.text,
+      totalPills: totalPills,
+      pillsRemaining: totalPills,
+      refillThreshold: refillThreshold,
+      lastRefillDate: totalPills != null ? DateTime.now() : null,
+      pillsPerDose: pillsPerDose, //Set pills per dose
+    );
 
-    await NotificationService().scheduleMedicationNotifications(widget.medication);
+    final box = Hive.box<Medication>('medications');
+    await box.put(medication.id, medication);
+
+    await NotificationService().scheduleMedicationNotifications(medication);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Medication updated successfully!'),
+          content: Text('Medication added successfully!'),
           backgroundColor: Colors.green,
         ),
       );
@@ -212,65 +186,78 @@ class _EditMedicationPageState extends State<EditMedicationPage> {
 
   @override
   Widget build(BuildContext context) {
-    final needsRefill = widget.medication.needsRefill();
-    final daysLeft = widget.medication.daysUntilOut();
-    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Medication'),
+        title: const Text('Add Medication'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Refill Alert Banner (if needed)
-            if (needsRefill)
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(16),
+            //Scanner Button
+            GestureDetector(
+              onTap: _scanPrescription,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withAlpha(26),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange, width: 2),
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF5B67CA),
+                      const Color(0xFF9B8CE8),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF5B67CA).withAlpha(77),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Row(
-                  children: [
-                    const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 32),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Running Low!',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${widget.medication.pillsRemaining} pills left (~$daysLeft days)',
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: _showRefillDialog,
-                      icon: const Icon(Icons.add, size: 18),
-                      label: const Text('Refill'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.camera_alt, color: Colors.white, size: 28),
+                    SizedBox(width: 12),
+                    Text(
+                      'Scan Prescription',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
               ),
+            ),
             
+            const SizedBox(height: 24),
+            
+            Row(
+              children: [
+                Expanded(child: Divider(color: Colors.grey[300])),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'OR ENTER MANUALLY',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Expanded(child: Divider(color: Colors.grey[300])),
+              ],
+            ),
+            
+            const SizedBox(height: 24),
+            
+            //Medication Name
             const Text(
               'Medication Name *',
               style: TextStyle(
@@ -300,7 +287,10 @@ class _EditMedicationPageState extends State<EditMedicationPage> {
                 ),
               ),
             ),
+
             const SizedBox(height: 20),
+
+            //Dosage
             const Text(
               'Dosage *',
               style: TextStyle(
@@ -330,7 +320,45 @@ class _EditMedicationPageState extends State<EditMedicationPage> {
                 ),
               ),
             ),
+
             const SizedBox(height: 20),
+
+            // NEW: Pills Per Dose
+            const Text(
+              'Pills Per Dose *',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1A1D2E),
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _pillsPerDoseController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                hintText: 'How many pills to take each time (e.g., 2)',
+                filled: true,
+                fillColor: Colors.white,
+                prefixIcon: const Icon(Icons.medication_liquid, color: Color(0xFF5B67CA)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Colors.grey[200]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(color: Color(0xFF5B67CA), width: 2),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            //Times
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -353,6 +381,7 @@ class _EditMedicationPageState extends State<EditMedicationPage> {
               ],
             ),
             const SizedBox(height: 8),
+
             if (_selectedTimes.isEmpty)
               Container(
                 padding: const EdgeInsets.all(16),
@@ -385,7 +414,10 @@ class _EditMedicationPageState extends State<EditMedicationPage> {
                   );
                 }).toList(),
               ),
+
             const SizedBox(height: 20),
+
+            //Notes
             const Text(
               'Notes (Optional)',
               style: TextStyle(
@@ -416,6 +448,7 @@ class _EditMedicationPageState extends State<EditMedicationPage> {
                 ),
               ),
             ),
+
             const SizedBox(height: 24),
 
             // Refill Tracking Section
@@ -442,8 +475,8 @@ class _EditMedicationPageState extends State<EditMedicationPage> {
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
+                          children: const [
+                            Text(
                               'Track Refills',
                               style: TextStyle(
                                 fontSize: 16,
@@ -451,23 +484,14 @@ class _EditMedicationPageState extends State<EditMedicationPage> {
                                 color: Color(0xFF1A1D2E),
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            if (_trackRefills && widget.medication.pillsRemaining != null)
-                              Text(
-                                '${widget.medication.pillsRemaining} pills remaining',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF718096),
-                                ),
-                              )
-                            else
-                              const Text(
-                                'Get alerts when running low',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF718096),
-                                ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Get alerts when running low',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF718096),
                               ),
+                            ),
                           ],
                         ),
                       ),
@@ -546,40 +570,26 @@ class _EditMedicationPageState extends State<EditMedicationPage> {
                         ),
                       ),
                     ),
-                    
-                    if (widget.medication.pillsRemaining != null) ...[
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          onPressed: _showRefillDialog,
-                          icon: const Icon(Icons.add),
-                          label: const Text('Mark as Refilled'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.orange,
-                            side: const BorderSide(color: Colors.orange, width: 2),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                        ),
-                      ),
-                    ],
                   ],
                 ],
               ),
             ),
 
             const SizedBox(height: 32),
+
+            //Save button
             SizedBox(
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: _updateMedication,
+                onPressed: _saveMedication,
                 child: const Text(
-                  'Update Medication',
+                  'Save Medication',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
+            
             const SizedBox(height: 40),
           ],
         ),
@@ -594,6 +604,7 @@ class _EditMedicationPageState extends State<EditMedicationPage> {
     _notesController.dispose();
     _totalPillsController.dispose();
     _refillThresholdController.dispose();
+    _pillsPerDoseController.dispose();
     super.dispose();
   }
 }
