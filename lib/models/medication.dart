@@ -50,7 +50,37 @@ class Medication extends HiveObject {
   DateTime? lastRefillDate;
 
   @HiveField(15)
-  int pillsPerDose; //How many pills to take each time 
+  int pillsPerDose; // How many units to take each time
+
+  @HiveField(16)
+  String dosageForm;
+
+  @HiveField(17)
+  String medicationType; // scheduled or as_needed
+
+  @HiveField(18)
+  String reason;
+
+  @HiveField(19)
+  String instructions;
+
+  @HiveField(20)
+  String foodInstruction;
+
+  @HiveField(21)
+  DateTime? startDate;
+
+  @HiveField(22)
+  DateTime? endDate;
+
+  @HiveField(23)
+  String prescriber;
+
+  @HiveField(24)
+  String pharmacy;
+
+  @HiveField(25)
+  String lifecycleStatus; // active, paused, completed
 
   Medication({
     required this.id,
@@ -68,8 +98,31 @@ class Medication extends HiveObject {
     this.pillsRemaining,
     this.refillThreshold,
     this.lastRefillDate,
-    this.pillsPerDose = 1, //1 pill per dose
-  }) : createdAt = createdAt ?? DateTime.now();
+    this.pillsPerDose = 1,
+    this.dosageForm = 'Tablet',
+    this.medicationType = 'scheduled',
+    this.reason = '',
+    this.instructions = '',
+    this.foodInstruction = 'No preference',
+    DateTime? startDate,
+    this.endDate,
+    this.prescriber = '',
+    this.pharmacy = '',
+    this.lifecycleStatus = 'active',
+  }) : createdAt = createdAt ?? DateTime.now(),
+       startDate = startDate ?? createdAt ?? DateTime.now();
+
+  bool get isAsNeeded => medicationType == 'as_needed';
+  bool get isCompleted => lifecycleStatus == 'completed' ||
+      (endDate != null && DateTime.now().isAfter(endDate!));
+
+  int? get courseDaysRemaining {
+    if (endDate == null) return null;
+    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final end = DateTime(endDate!.year, endDate!.month, endDate!.day);
+    final days = end.difference(today).inDays;
+    return days < 0 ? 0 : days;
+  }
 
   bool isOverdue(String scheduleTime) {
     final now = DateTime.now();

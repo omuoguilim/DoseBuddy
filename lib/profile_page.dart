@@ -7,6 +7,12 @@ import 'models/medication.dart';
 import 'package:share_plus/share_plus.dart';
 import 'services/notification_settings_page.dart';
 import 'auth_page.dart';
+import 'care_circle_page.dart';
+import 'emergency_card_page.dart';
+import 'privacy_center_page.dart';
+import 'prescription_capture_page.dart';
+import 'health_timeline_page.dart';
+import 'doctor_report_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -436,6 +442,28 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ],
               ),
+            ),
+
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('Your health tools', style: TextStyle(fontSize:20,fontWeight:FontWeight.bold,color:Color(0xFF1A1D2E))),
+                const SizedBox(height:12),
+                Card(child: Column(children:[
+                  ListTile(leading:const Icon(Icons.group_outlined,color:Color(0xFF5B67CA)),title:const Text('Care Circle'),subtitle:const Text('Trusted people and sharing permissions'),trailing:const Icon(Icons.chevron_right),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const CareCirclePage()))),
+                  const Divider(height:1),
+                  ListTile(leading:const Icon(Icons.emergency_outlined,color:Color(0xFF5B67CA)),title:const Text('Emergency medication card'),subtitle:const Text('Medications, allergies and emergency contact'),trailing:const Icon(Icons.chevron_right),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const EmergencyCardPage()))),
+                  const Divider(height:1),
+                  ListTile(leading:const Icon(Icons.health_and_safety_outlined,color:Color(0xFF5B67CA)),title:const Text('Privacy Center'),subtitle:const Text('Review sharing and privacy preferences'),trailing:const Icon(Icons.chevron_right),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const PrivacyCenterPage()))),
+                  const Divider(height:1),
+                  ListTile(leading:const Icon(Icons.document_scanner_outlined,color:Color(0xFF5B67CA)),title:const Text('Add from prescription'),subtitle:const Text('Capture a label and verify details'),trailing:const Icon(Icons.chevron_right),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const PrescriptionCapturePage()))),
+                  const Divider(height:1),
+                  ListTile(leading:const Icon(Icons.timeline_outlined,color:Color(0xFF5B67CA)),title:const Text('Health timeline'),trailing:const Icon(Icons.chevron_right),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const HealthTimelinePage()))),
+                  const Divider(height:1),
+                  ListTile(leading:const Icon(Icons.description_outlined,color:Color(0xFF5B67CA)),title:const Text('Doctor report'),trailing:const Icon(Icons.chevron_right),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const DoctorReportPage()))),
+                ])),
+              ]),
             ),
 
             const SizedBox(height: 16),

@@ -2,14 +2,35 @@ import 'package:flutter/material.dart';
 import 'models/medication.dart';
 import 'package:intl/intl.dart';
 
-class SideEffectsHistoryPage extends StatelessWidget {
+class SideEffectsHistoryPage extends StatefulWidget {
   final Medication medication;
 
   const SideEffectsHistoryPage({super.key, required this.medication});
 
   @override
+  State<SideEffectsHistoryPage> createState() => _SideEffectsHistoryPageState();
+}
+
+class _SideEffectsHistoryPageState extends State<SideEffectsHistoryPage> {
+  // Pill color pairs (light, dark) - same as in square.dart and calendar_page.dart
+  static const List<List<Color>> pillColors = [
+    [Color(0xFFB3E5FC), Color(0xFF4FC3F7)], // Light blue, Blue
+    [Color(0xFFFFCC80), Color(0xFFFF9800)], // Light orange, Orange
+    [Color(0xFFEF9A9A), Color(0xFFE53935)], // Light red, Red
+    [Color(0xFFE1BEE7), Color(0xFFAB47BC)], // Light purple, Purple
+    [Color(0xFFA5D6A7), Color(0xFF66BB6A)], // Light green, Green
+  ];
+
+  List<Color> _getPillColors() {
+    // Use medication ID hashCode to determine color (consistent per medication)
+    final index = widget.medication.id.hashCode.abs() % pillColors.length;
+    return pillColors[index];
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final sideEffects = medication.sideEffects ?? [];
+    final sideEffects = widget.medication.sideEffects ?? [];
+    final colors = _getPillColors();
 
     return Scaffold(
       appBar: AppBar(
@@ -18,7 +39,7 @@ class SideEffectsHistoryPage extends StatelessWidget {
       ),
       body: Column(
         children: [
-          //Header section
+          // Header section
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
@@ -37,16 +58,53 @@ class SideEffectsHistoryPage extends StatelessWidget {
               children: [
                 Row(
                   children: [
+                    // Colorful Pill Icon (same as home page and calendar)
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      width: 56,
+                      height: 56,
                       decoration: const BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
-                        Icons.medication,
-                        color: Color(0xFF5B67CA),
-                        size: 24,
+                      child: Center(
+                        child: Transform.rotate(
+                          angle: -0.785398, // -45 degrees in radians
+                          child: Container(
+                            width: 36,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                // Left half of pill
+                                Expanded(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: colors[0],
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(8),
+                                        bottomLeft: Radius.circular(8),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // Right half of pill
+                                Expanded(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: colors[1],
+                                      borderRadius: const BorderRadius.only(
+                                        topRight: Radius.circular(8),
+                                        bottomRight: Radius.circular(8),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -55,7 +113,7 @@ class SideEffectsHistoryPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            medication.name,
+                            widget.medication.name,
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -63,7 +121,7 @@ class SideEffectsHistoryPage extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            medication.dosage,
+                            widget.medication.dosage,
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.white70,
@@ -93,7 +151,7 @@ class SideEffectsHistoryPage extends StatelessWidget {
             ),
           ),
 
-          //Side effects list
+          // Side effects list
           Expanded(
             child: sideEffects.isEmpty
                 ? Center(
@@ -130,7 +188,7 @@ class SideEffectsHistoryPage extends StatelessWidget {
                     padding: const EdgeInsets.all(16),
                     itemCount: sideEffects.length,
                     itemBuilder: (context, index) {
-                      //Show most recent first
+                      // Show most recent first
                       final log = sideEffects[sideEffects.length - 1 - index];
                       return _buildSideEffectCard(log);
                     },
@@ -158,7 +216,7 @@ class SideEffectsHistoryPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            //Date and time
+            // Date and time
             Row(
               children: [
                 Icon(
@@ -180,7 +238,7 @@ class SideEffectsHistoryPage extends StatelessWidget {
             
             const SizedBox(height: 16),
             
-            //Side effects
+            // Side effects
             if (hasNone)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -238,7 +296,7 @@ class SideEffectsHistoryPage extends StatelessWidget {
               ),
             ],
             
-            //Notes
+            // Notes
             if (notes.isNotEmpty) ...[
               const SizedBox(height: 16),
               Container(

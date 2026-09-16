@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/medication.dart';
+import 'models/dose_event.dart';
+import 'models/symptom_event.dart';
 import 'services/notification_services.dart';
 import 'splash_screen.dart';
 
@@ -10,7 +12,11 @@ void main() async {
   //Initialize Hive
   await Hive.initFlutter();
   Hive.registerAdapter(MedicationAdapter());
+  Hive.registerAdapter(DoseEventAdapter());
+  Hive.registerAdapter(SymptomEventAdapter());
   await Hive.openBox<Medication>('medications');
+  await Hive.openBox<DoseEvent>('dose_events');
+  await Hive.openBox<SymptomEvent>('symptom_events');
 
   //Initialize notifications
   await NotificationService().initialize();

@@ -43,3 +43,10 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Local development backups and debug logs
+ios_before_regeneration/
+flutter_after_mlkit.txt
+flutter_build.txt
+pubspec.yaml.mlkit-backup
+pubspec.lock.mlkit-backup

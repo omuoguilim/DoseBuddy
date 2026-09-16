@@ -26,7 +26,8 @@ dependencies:
   timezone: ^0.9.2
   
   # Media & Sharing
-  image_picker: ^1.0.7          # Camera/gallery ✅ FIXES profile_page.dart (ImageSource)
+  image_picker: ^1.0.7          # Camera/gallery
+  google_mlkit_text_recognition: ^0.16.0  # On-device prescription label OCR
   share_plus: ^7.2.1            # Share medication data
   
   # Icons

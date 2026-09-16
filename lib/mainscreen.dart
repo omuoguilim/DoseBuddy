@@ -1,81 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'homepage.dart';
-import 'calendar_page.dart';
+import 'today_page.dart';
+import 'medications_page.dart';
+import 'insights_page.dart';
 import 'profile_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
-
-  @override
-  State<MainScreen> createState() => _MainScreenState();
+  @override State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  Widget _page(int i) { switch(i){ case 0:return const TodayPage(); case 1:return const MedicationsPage(); case 2:return const InsightsPage(); default:return const ProfilePage(); } }
 
-  final List<Widget> _pages = [
-    const HomePage(),
-    const CalendarPage(),
-    const ProfilePage(),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-      ),
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF8F9FA),
-        extendBodyBehindAppBar: true,
-        body: _pages[_currentIndex],
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, -2),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            child: BottomNavigationBar(
-              currentIndex: _currentIndex,
-              onTap: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
-              selectedItemColor: const Color(0xFF5B67CA),
-              unselectedItemColor: Colors.grey,
-              type: BottomNavigationBarType.fixed,
-              backgroundColor: Colors.white,
-              elevation: 0,
-              selectedFontSize: 12,
-              unselectedFontSize: 12,
-              selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home_rounded),
-                  label: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.calendar_today_rounded),
-                  label: 'Calendar',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person_rounded),
-                  label: 'Profile',
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  @override Widget build(BuildContext context) => Scaffold(
+    body: KeyedSubtree(key: ValueKey(_currentIndex), child: _page(_currentIndex)),
+    bottomNavigationBar: NavigationBar(
+      height:72,
+      selectedIndex:_currentIndex,
+      onDestinationSelected:(i)=>setState(()=>_currentIndex=i),
+      indicatorColor:const Color(0xFFE6E8FF),
+      destinations:const [
+        NavigationDestination(icon:Icon(Icons.today_outlined),selectedIcon:Icon(Icons.today_rounded),label:'Today'),
+        NavigationDestination(icon:Icon(Icons.medication_outlined),selectedIcon:Icon(Icons.medication_rounded),label:'Medications'),
+        NavigationDestination(icon:Icon(Icons.insights_outlined),selectedIcon:Icon(Icons.insights_rounded),label:'Insights'),
+        NavigationDestination(icon:Icon(Icons.person_outline_rounded),selectedIcon:Icon(Icons.person_rounded),label:'You'),
+      ],
+    ),
+  );
 }
