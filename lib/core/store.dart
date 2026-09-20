@@ -69,7 +69,7 @@ class AppStore extends ChangeNotifier {
         for(final log in m.takenLog??<Map<String,dynamic>>[]){
           final date=DateTime.parse(log['date'] as String);final minute=parseClock(log['scheduledTime'] as String);
           final d=ScheduledDose(doseKey(m.id,date,minute),m.id,DateTime(date.year,date.month,date.day,minute~/60,minute%60),fields);
-          r.outcomes[d.key]={'dose':d.snapshot(),'status':'Taken','takenAt':log['takenAt'],'recordedAt':log['takenAt']??date.toIso8601String(),'amount':m.pillsPerDose,'reason':'Imported record; original schedule version unavailable.','prn':false,'inventoryDeduction':0};
+          r.outcomes[d.key]={'dose':d.snapshot(),'status':'Taken','takenAt':log['takenAt'],'recordedAt':log['takenAt']??date.toIso8601String(),'amount':m.pillsPerDose,'reason':'Imported record; original schedule version unavailable.','prn':false,'inventoryDeduction':0,'inventoryReconciled':true};
         }
         if(m.sideEffects?.isNotEmpty??false)(data['audit'] as List).add({'action':'legacy side effects imported','medicationId':m.id,'records':m.sideEffects});
       }
@@ -83,7 +83,8 @@ class AppStore extends ChangeNotifier {
         final f=med==null?<String,dynamic>{'name':'Medication no longer listed','strength':'Unknown','amount':e.amount,'unit':'unit (verify)'}:r.current(med);
         final prn=e.id.startsWith('prn_');final key=prn?e.id:doseKey(e.medicationId,e.scheduledAt,e.scheduledAt.hour*60+e.scheduledAt.minute);
         final d=ScheduledDose(key,e.medicationId,e.scheduledAt,f);
-        if(['taken','late','skipped'].contains(e.status))r.outcomes[key]={'dose':d.snapshot(),'status':e.status=='skipped'?'Skipped':'Taken','takenAt':e.takenAt?.toIso8601String(),'recordedAt':(e.takenAt??e.scheduledAt).toIso8601String(),'amount':e.amount,'reason':e.reason??e.notes??'Imported record','prn':prn,'inventoryDeduction':0};
+        (data['audit'] as List).add({'action':'legacy dose event imported','medicationId':e.medicationId,'id':e.id,'scheduledAt':e.scheduledAt.toIso8601String(),'takenAt':e.takenAt?.toIso8601String(),'status':e.status,'amount':e.amount,'reason':e.reason,'notes':e.notes});
+        if(['taken','late','skipped'].contains(e.status))r.outcomes[key]={'dose':d.snapshot(),'status':e.status=='skipped'?'Skipped':'Taken','takenAt':e.takenAt?.toIso8601String(),'recordedAt':(e.takenAt??e.scheduledAt).toIso8601String(),'amount':e.amount,'reason':e.reason??e.notes??'Imported record','prn':prn,'inventoryDeduction':0,'inventoryReconciled':true};
       }
       await box.close();
     }
@@ -96,6 +97,6 @@ class AppStore extends ChangeNotifier {
     data['emergency']={'allergies':prefs.getString('emergency_allergies')??'','contact':prefs.getString('emergency_contact')??'','notes':prefs.getString('emergency_notes')??''};
     final people=prefs.getString('care_circle');
     if(people!=null)(data['audit'] as List).add({'action':'legacy local care contacts preserved; no sharing active','contacts':jsonDecode(people)});
-    return data;
+    return jsonDecode(jsonEncode(data,toEncodable:(value){if(value is DateTime)return value.toIso8601String();throw UnsupportedError('Unsupported legacy record value');})) as Json;
   }
 }

@@ -6,8 +6,8 @@ This branch replaces the prototype UI with a connected local-first app. It is a 
 
 - One versioned schedule and outcome model for Today, calendar history, counts and reports. Edits apply from their save time. Course end dates are inclusive; paused courses stop generating new doses.
 - Decimal amounts with explicit administration units. Daily schedules and as-needed recording have separate behavior.
-- Connected medication editing, pause/resume, permanent deletion, supply reconciliation, dose corrections and symptom editing/deletion.
-- Atomic encrypted snapshot writes with guarded saves. Migration preserves existing recorded doses and supply counts, verifies the encrypted snapshot, then removes old plaintext boxes. Old unrecorded totals cannot be reconstructed and are explicitly excluded/disclosed. Legacy side-effect payloads and local contact lists remain in the complete JSON export.
+- Connected medication editing, pause/resume, permanent deletion, supply reconciliation, dose corrections and symptom editing/deletion. A manually reconciled supply count becomes a new baseline; earlier records no longer adjust that count.
+- Encrypted snapshot writes with database compaction with guarded saves. Migration preserves existing recorded doses and supply counts, verifies the encrypted snapshot, then removes old plaintext boxes. Old unrecorded totals cannot be reconstructed and are explicitly excluded/disclosed. Legacy side-effect payloads and local contact lists remain in the complete JSON export.
 - No fake account, password reset, social login, caregiver permissions, interaction checker, analytics preference or weighted health score.
 - Device authentication gate, privacy notice, usage guidance, complete local deletion, private notification text and reviewed exports.
 - Finite one-shot reminder queue, real timezone lookup, explicit permission requests, foreground record/snooze actions and notification coverage display. iOS uses notification taps; Android also offers action buttons. The app refreshes on open/resume and relevant edits. Only the latest snooze is retained and schedule refresh replaces snoozes.

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
-import 'core/records.dart';
 import 'core/store.dart';
 import 'core/reminders.dart';
 import 'ui/home.dart';

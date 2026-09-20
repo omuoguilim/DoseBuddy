@@ -43,7 +43,7 @@ class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key,required this.store,required this.reminders,required this.authenticate});
   Future<void> change(BuildContext context,String key,bool value)async{try{
     if(key=='reminders'&&value&&!await reminders.requestPermission())throw StateError('Notification or exact-alarm permission was not granted. Enable it in device settings and retry.');
-    if(key=='appLock'&&!await authenticate())return;
+    if(key=='appLock'&&!await authenticate())throw StateError('Authentication was not completed. Check your device passcode or biometric settings and retry.');
     await store.update((r)=>r.settings[key]=value);if(key!='appLock')await reminders.sync(store.records);
   }catch(e){if(context.mounted)showError(context,e);}}
   void textPage(BuildContext context,String title,String text)=>Navigator.push(context,MaterialPageRoute<void>(builder:(_)=>Scaffold(appBar:AppBar(title:Text(title)),body:SingleChildScrollView(padding:const EdgeInsets.all(20),child:SelectableText(text)))));

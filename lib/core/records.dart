@@ -70,6 +70,9 @@ class Records {
     if (supply != null && (!supply.isFinite || supply < 0)) throw ArgumentError('Supply must be zero or greater.');
     if (threshold != null && (!threshold.isFinite || threshold < 0)) throw ArgumentError('Refill threshold must be zero or greater.');
     final previous = medications[id] as Json?;
+    if(previous != null && (previous['supply'] != supply || current(previous)['unit'] != fields['unit'])) {
+      for(final value in outcomes.values){final o=value as Json;if((o['dose'] as Json)['medicationId']==id){o['inventoryDeduction']=0;o['inventoryReconciled']=true;}}
+    }
     final versions = previous == null ? <dynamic>[] : previous['versions'] as List;
     if (versions.isNotEmpty) (versions.last as Json)['effectiveUntil'] = now.toIso8601String();
     versions.add({...copyJson(fields), 'effectiveFrom': now.toIso8601String(), 'effectiveUntil': null});
@@ -90,13 +93,13 @@ class Records {
     final previous = outcomes[d.key] as Json?;
     final med = medications[d.medicationId] as Json?;
     num deduction = 0;
-    if (med?['supply'] != null) {
+    if (med?['supply'] != null && previous?['inventoryReconciled'] != true) {
       final restored = (med!['supply'] as num) + ((previous?['inventoryDeduction'] as num?) ?? 0);
       deduction = status == 'Taken' ? quantity.clamp(0, restored) : 0;
       med['supply'] = restored - deduction;
     }
     if (previous != null) (data['audit'] as List).add({'action':'dose corrected','previous':copyJson(previous),'at':now.toIso8601String()});
-    outcomes[d.key] = {'dose':d.snapshot(),'status':status,'takenAt':status == 'Taken' ? actual.toIso8601String() : null,'recordedAt':now.toIso8601String(),'utcOffsetMinutes':actual.timeZoneOffset.inMinutes,'amount':quantity,'reason':reason,'prn':prn,'inventoryDeduction':deduction};
+    outcomes[d.key] = {'dose':d.snapshot(),'status':status,'takenAt':status == 'Taken' ? actual.toIso8601String() : null,'recordedAt':now.toIso8601String(),'utcOffsetMinutes':actual.timeZoneOffset.inMinutes,'amount':quantity,'reason':reason,'prn':prn,'inventoryDeduction':deduction,'inventoryReconciled':previous?['inventoryReconciled']==true};
   }
 
   void undo(String key, DateTime now) {

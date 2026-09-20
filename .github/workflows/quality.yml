@@ -17,6 +17,7 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      - run: dart format lib test
       - run: git diff -- pubspec.lock
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
@@ -24,7 +25,10 @@ jobs:
         if: always()
         with:
           name: resolved-dependency-lock
-          path: pubspec.lock
+          path: |
+            pubspec.lock
+            lib/
+            test/
   ios-simulator:
     runs-on: macos-latest
     timeout-minutes: 30
@@ -37,6 +41,7 @@ jobs:
       - run: flutter pub get
       - run: git diff -- pubspec.lock
       - run: flutter build ios --simulator --debug
+      - run: git diff -- ios/Podfile.lock
       - run: ditto -c -k --sequesterRsrc --keepParent build/ios/iphonesimulator/Runner.app DoseBuddy-simulator.zip
       - uses: actions/upload-artifact@v4
         with:
