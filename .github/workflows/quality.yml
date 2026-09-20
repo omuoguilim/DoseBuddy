@@ -1,0 +1,44 @@
+name: DoseBuddy checks
+on:
+  pull_request:
+  push:
+    branches: [main, dosebuddy/release-rebuild]
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: git diff -- pubspec.lock
+      - run: flutter analyze --no-fatal-infos
+      - run: flutter test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: resolved-dependency-lock
+          path: pubspec.lock
+  ios-simulator:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+      - run: flutter pub get
+      - run: git diff -- pubspec.lock
+      - run: flutter build ios --simulator --debug
+      - run: ditto -c -k --sequesterRsrc --keepParent build/ios/iphonesimulator/Runner.app DoseBuddy-simulator.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DoseBuddy-simulator
+          path: DoseBuddy-simulator.zip
