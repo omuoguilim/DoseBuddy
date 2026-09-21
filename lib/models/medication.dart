@@ -14,13 +14,13 @@ class Medication extends HiveObject {
   String dosage;
 
   @HiveField(3)
-  List<String> times; 
+  List<String> times;
 
   @HiveField(4)
   String notes;
 
   @HiveField(5)
-  String status; 
+  String status;
 
   @HiveField(6)
   DateTime? lastTaken;
@@ -113,12 +113,17 @@ class Medication extends HiveObject {
        startDate = startDate ?? createdAt ?? DateTime.now();
 
   bool get isAsNeeded => medicationType == 'as_needed';
-  bool get isCompleted => lifecycleStatus == 'completed' ||
+  bool get isCompleted =>
+      lifecycleStatus == 'completed' ||
       (endDate != null && DateTime.now().isAfter(endDate!));
 
   int? get courseDaysRemaining {
     if (endDate == null) return null;
-    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
     final end = DateTime(endDate!.year, endDate!.month, endDate!.day);
     final days = end.difference(today).inDays;
     return days < 0 ? 0 : days;
@@ -127,8 +132,10 @@ class Medication extends HiveObject {
   bool isOverdue(String scheduleTime) {
     final now = DateTime.now();
     final scheduledDateTime = _parseTimeToDateTime(scheduleTime);
-    final graceEndTime = scheduledDateTime.add(Duration(minutes: gracePeriodMinutes));
-    
+    final graceEndTime = scheduledDateTime.add(
+      Duration(minutes: gracePeriodMinutes),
+    );
+
     return now.isAfter(graceEndTime);
   }
 
@@ -143,35 +150,45 @@ class Medication extends HiveObject {
     if (isPM && hour != 12) hour += 12;
     if (!isPM && hour == 12) hour = 0;
 
-    return DateTime(referenceDate.year, referenceDate.month, referenceDate.day, hour, minute);
+    return DateTime(
+      referenceDate.year,
+      referenceDate.month,
+      referenceDate.day,
+      hour,
+      minute,
+    );
   }
 
   String? getNextScheduledTime() {
     final now = DateTime.now();
-    
+
     for (var time in times) {
       final scheduledDateTime = _parseTimeToDateTime(time);
       if (now.isBefore(scheduledDateTime)) {
         return time;
       }
     }
-    
+
     return times.isNotEmpty ? times.first : null;
   }
 
   bool isInGracePeriod(String scheduleTime) {
     final now = DateTime.now();
     final scheduledDateTime = _parseTimeToDateTime(scheduleTime);
-    final graceEndTime = scheduledDateTime.add(Duration(minutes: gracePeriodMinutes));
-    
+    final graceEndTime = scheduledDateTime.add(
+      Duration(minutes: gracePeriodMinutes),
+    );
+
     return now.isAfter(scheduledDateTime) && now.isBefore(graceEndTime);
   }
 
   String getStatusForTime(String scheduleTime) {
     final now = DateTime.now();
     final scheduledDateTime = _parseTimeToDateTime(scheduleTime);
-    final graceEndTime = scheduledDateTime.add(Duration(minutes: gracePeriodMinutes));
-    
+    final graceEndTime = scheduledDateTime.add(
+      Duration(minutes: gracePeriodMinutes),
+    );
+
     if (now.isBefore(scheduledDateTime)) {
       return 'upcoming';
     } else if (now.isBefore(graceEndTime)) {
@@ -180,11 +197,14 @@ class Medication extends HiveObject {
       if (lastTaken != null) {
         final takenTime = lastTaken!;
         final takenDateTime = DateTime(
-          now.year, now.month, now.day,
-          takenTime.hour, takenTime.minute
+          now.year,
+          now.month,
+          now.day,
+          takenTime.hour,
+          takenTime.minute,
         );
-        
-        if (takenDateTime.isAfter(scheduledDateTime) && 
+
+        if (takenDateTime.isAfter(scheduledDateTime) &&
             takenDateTime.isBefore(graceEndTime)) {
           return 'taken';
         }
@@ -195,9 +215,9 @@ class Medication extends HiveObject {
 
   bool wasTakenOn(DateTime date, String scheduledTime) {
     if (takenLog == null || takenLog!.isEmpty) return false;
-    
+
     final dateStr = _formatDate(date);
-    
+
     for (var log in takenLog!) {
       if (log['date'] == dateStr && log['scheduledTime'] == scheduledTime) {
         return true;
@@ -208,60 +228,69 @@ class Medication extends HiveObject {
 
   String getStatusForDateTime(DateTime date, String scheduledTime) {
     final now = DateTime.now();
-    final scheduledDateTime = _parseTimeToDateTime(scheduledTime, forDate: date);
-    final graceEndTime = scheduledDateTime.add(Duration(minutes: gracePeriodMinutes));
-    
+    final scheduledDateTime = _parseTimeToDateTime(
+      scheduledTime,
+      forDate: date,
+    );
+    final graceEndTime = scheduledDateTime.add(
+      Duration(minutes: gracePeriodMinutes),
+    );
+
     final isPast = now.isAfter(graceEndTime);
-    
+
     if (wasTakenOn(date, scheduledTime)) {
       return 'taken';
     }
-    
+
     if (isPast) {
       return 'missed';
     }
-    
+
     if (now.isAfter(scheduledDateTime) && now.isBefore(graceEndTime)) {
       return 'grace_period';
     }
-    
+
     return 'upcoming';
   }
 
   //ark as taken and reduce pill count by pillsPerDose
   void markAsTakenOn(DateTime date, String scheduledTime) {
     takenLog ??= [];
-    
+
     final dateStr = _formatDate(date);
-    
+
     final exists = takenLog!.any(
-      (log) => log['date'] == dateStr && log['scheduledTime'] == scheduledTime
+      (log) => log['date'] == dateStr && log['scheduledTime'] == scheduledTime,
     );
-    
+
     if (!exists) {
       takenLog!.add({
         'date': dateStr,
         'scheduledTime': scheduledTime,
         'takenAt': DateTime.now().toIso8601String(),
       });
-      
+
       //ecrement pill count by pillsPerDose (not just 1)
       if (pillsRemaining != null && pillsRemaining! > 0) {
         pillsRemaining = pillsRemaining! - pillsPerDose;
         if (pillsRemaining! < 0) pillsRemaining = 0; // Don't go negative
       }
     }
-    
+
     lastTaken = DateTime.now();
     status = 'taken';
   }
 
   bool isScheduledFor(DateTime date) {
-    final createdDate = DateTime(createdAt.year, createdAt.month, createdAt.day);
+    final createdDate = DateTime(
+      createdAt.year,
+      createdAt.month,
+      createdAt.day,
+    );
     final checkDate = DateTime(date.year, date.month, date.day);
-    
-    return checkDate.isAfter(createdDate.subtract(const Duration(days: 1))) || 
-           checkDate.isAtSameMomentAs(createdDate);
+
+    return checkDate.isAfter(createdDate.subtract(const Duration(days: 1))) ||
+        checkDate.isAtSameMomentAs(createdDate);
   }
 
   bool needsRefill() {
@@ -272,7 +301,8 @@ class Medication extends HiveObject {
   //alculates days until out considering pillsPerDose
   int? daysUntilOut() {
     if (pillsRemaining == null || times.isEmpty) return null;
-    final pillsPerDay = times.length * pillsPerDose; // Total pills consumed per day
+    final pillsPerDay =
+        times.length * pillsPerDose; // Total pills consumed per day
     if (pillsPerDay == 0) return null;
     return (pillsRemaining! / pillsPerDay).floor();
   }

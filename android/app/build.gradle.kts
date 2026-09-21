@@ -53,8 +53,7 @@ android {
     }
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Production credentials are required by the gate above.
             if (signingFile.exists()) signingConfig = signingConfigs.getByName("production")
         }
     }

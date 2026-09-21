@@ -17,14 +17,14 @@ This branch replaces the prototype UI with a connected local-first app. It is a 
 
 ## Validation and remaining release gates
 
-Local Flutter bootstrap was rejected by automatic review after it attempted to reach a cloud metadata endpoint. No local Flutter test, analyzer or native build success is claimed. GitHub workflow runs analysis, tests and an iOS simulator build with Flutter 3.47.2. Review its actual result and resolve any failures before merging.
+Local Flutter bootstrap was rejected by automatic review after it attempted to reach a cloud metadata endpoint. No local Flutter test, analyzer or native build success is claimed. GitHub run 35537310900 passed analysis, the test suite and the iOS simulator build with Flutter 3.47.2. The final cleanup is checked again on the latest PR commit. These checks do not replace physical-device testing.
 
 1. Verify migration on a COPY of a populated prototype install: multiple-dose medications, late/skipped events, deleted medications, symptoms, supply and legacy side effects. Do not test the first upgrade on the sole copy of real records. Keep the same bundle identifier to test in-place migration.
 2. Verify reminders on physical iPhone and Android: app terminated, restart, disabled permissions, exact-alarm revocation, Focus/battery restrictions, 12 AM/PM, DST gaps and overlaps, travel, removed times, course expiry, record/skip/correct and queue renewal. This finite scheduler requires regular app opening and is not an unattended indefinite reminder service.
 3. Verify app-lock resume, notification launch, biometric cancellation, passcode fallback, OS task-switcher snapshots and interrupted writes. Verify erased data and scheduled alerts are absent after restart. Verify secure-storage/key-loss behavior; never silently reset on key failure.
 4. Verify camera/gallery cancellation, denied access, Latin/non-Latin labels, label file cleanup, very long OCR output and complete user verification. Non-Latin OCR is not supported in this version.
 5. Verify large text, VoiceOver/TalkBack, long medication names, small screens and iPad share sheets. Review final icons and store screenshots.
-6. Resolve and commit pubspec.lock and ios/Podfile.lock using the documented toolchain. Existing lockfiles are preserved until resolution succeeds. The workflow uploads the resolved Dart lock as an artifact.
+6. Resolved pubspec.lock and ios/Podfile.lock are committed from the successful GitHub build. Use the documented toolchain and review dependency changes before future upgrades.
 7. Register production identifiers and signing with the app owner's developer accounts. Android deliberately refuses release with debug signing or without an explicit application ID. Existing development identifiers are retained for migration testing. Choose the App Store identity before public distribution.
 8. Review privacy/usage text with the intended launch markets and actual distribution setup. Publish the privacy URL, support URL, accurate privacy labels and store metadata. No claim of HIPAA compliance or regulatory clearance is made.
 9. Have a pharmacist/clinician review wording and representative workflows. Do not add dosage recommendations or interaction claims without validated clinical data and appropriate review.
