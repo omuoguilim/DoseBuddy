@@ -1,16 +1,66 @@
-# dosebuddy
+<p align="center"><img src="assets/images/pill_bottle_logo.svg" alt="DoseBuddy logo" width="144"></p>
 
-A new Flutter project.
+# DoseBuddy
 
-## Getting Started
+A Flutter medication tracker for keeping daily schedules, dose records and symptom notes in one place. My first solo app, built around the everyday work of remembering medication and reviewing what happened.
 
-This project is a starting point for a Flutter application.
+## Project status
 
-A few resources to get you started if this is your first Flutter project:
+The default branch contains the original prototype. The coordinated rebuild is available in [pull request #1](https://github.com/omuoguilim/DoseBuddy/pull/1), which has not been merged. Its encrypted storage, device authentication and revised record system should not be assumed to exist on `main`.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+The rebuild's analysis, 18 tests and iOS simulator build passed on its reviewed commit. Physical-device checks and production signing remain release requirements.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## In the prototype
+
+- Medication entry, schedules and course details.
+- Dose logging, calendar history and as-needed records.
+- Symptom notes and medication-history views.
+- Local reminders and prescription-label text recognition.
+- Report and emergency-card screens.
+
+Some prototype controls are incomplete. Account, caregiver-sharing and drug-safety screens are not evidence of working cloud services or validated interaction checking. See [the rebuild](https://github.com/omuoguilim/DoseBuddy/pull/1) for the connected replacement workflows.
+
+## Built with
+
+Flutter and Dart; Hive for local records; SharedPreferences; local notifications; Google ML Kit text recognition; image picker and sharing plugins.
+
+## Run locally
+
+Install Flutter and the platform tooling for your device. The committed dependency lock requires a newer SDK than the minimum in the original pubspec; Flutter 3.47.2 was used for the rebuild checks.
+
+```sh
+git clone https://github.com/omuoguilim/DoseBuddy.git
+cd DoseBuddy
+flutter pub get
+flutter run
+```
+
+For iOS, use a Mac with Xcode, CocoaPods and a configured simulator or device. The Podfile targets iOS 15.5. Camera capture, notifications and authentication need device testing.
+
+To review the rebuild instead:
+
+```sh
+git fetch origin
+git switch --track origin/dosebuddy/release-rebuild
+flutter pub get
+flutter analyze --no-fatal-infos
+flutter test
+flutter run
+```
+
+## Where to look
+
+| Path on main | Purpose |
+| --- | --- |
+| `lib/models/` | Medication, dose and symptom records |
+| `lib/today_page.dart` | Daily medication view |
+| `lib/calendar_page.dart` | Calendar history |
+| `lib/services/` | Notification services |
+| `lib/prescription_capture_page.dart` | Prescription-label capture |
+| `assets/images/` | DoseBuddy brand assets |
+
+The rebuild uses `lib/core/` and `lib/ui/` instead. Its [release review](https://github.com/omuoguilim/DoseBuddy/blob/dosebuddy/release-rebuild/RELEASE_REVIEW.md) documents migration and device checks.
+
+## Limits
+
+DoseBuddy is a record and reminder project, not a source of dosing instructions or medical advice. Scanned text needs manual verification. Use synthetic records when testing or demonstrating the prototype; do not post private medication information in public issues.
