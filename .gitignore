@@ -50,3 +50,8 @@ flutter_after_mlkit.txt
 flutter_build.txt
 pubspec.yaml.mlkit-backup
 pubspec.lock.mlkit-backup
+
+# Local production signing material
+android/key.properties
+*.jks
+*.keystore

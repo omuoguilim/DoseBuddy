@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Dosebuddy</string>
+	<string>DoseBuddy</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -67,8 +67,10 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
-<string>DoseBuddy uses the camera to scan prescription labels for medication entry.</string>
-<key>NSPhotoLibraryUsageDescription</key>
+    <string>DoseBuddy uses the camera to scan prescription labels for medication entry.</string>
+    <key>NSFaceIDUsageDescription</key>
+    <string>Use Face ID to unlock your private DoseBuddy records.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
 <string>DoseBuddy can read a prescription label image you choose from your photo library.</string>
 </dict>
 </plist>

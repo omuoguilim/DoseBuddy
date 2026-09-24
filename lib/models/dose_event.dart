@@ -57,13 +57,21 @@ class DoseEventAdapter extends TypeAdapter<DoseEvent> {
   void write(BinaryWriter writer, DoseEvent obj) {
     writer
       ..writeByte(8)
-      ..writeByte(0)..write(obj.id)
-      ..writeByte(1)..write(obj.medicationId)
-      ..writeByte(2)..write(obj.scheduledAt)
-      ..writeByte(3)..write(obj.takenAt)
-      ..writeByte(4)..write(obj.status)
-      ..writeByte(5)..write(obj.amount)
-      ..writeByte(6)..write(obj.reason)
-      ..writeByte(7)..write(obj.notes);
+      ..writeByte(0)
+      ..write(obj.id)
+      ..writeByte(1)
+      ..write(obj.medicationId)
+      ..writeByte(2)
+      ..write(obj.scheduledAt)
+      ..writeByte(3)
+      ..write(obj.takenAt)
+      ..writeByte(4)
+      ..write(obj.status)
+      ..writeByte(5)
+      ..write(obj.amount)
+      ..writeByte(6)
+      ..write(obj.reason)
+      ..writeByte(7)
+      ..write(obj.notes);
   }
 }

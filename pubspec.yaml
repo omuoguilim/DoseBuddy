@@ -1,10 +1,11 @@
 name: dosebuddy
 description: A medication tracking and reminder app (iOS)
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.12.0 <4.0.0'
+  flutter: '>=3.44.0'
 
 dependencies:
   flutter:
@@ -16,12 +17,12 @@ dependencies:
   shared_preferences: ^2.2.2
   
   # UI & Design
-  flutter_svg: ^2.0.9           # For pill bottle logos ✅
+  flutter_svg: ^2.0.9           # Pill bottle assets
   table_calendar: ^3.0.9        # Calendar widget
   intl: ^0.18.1                 # Date formatting
-  fl_chart: ^0.66.0             # Charts and graphs ✅ FIXES insights_page.dart
+  fl_chart: ^0.66.0             # Legacy chart dependency
   
-  # Notifications (iOS handles permissions automatically)
+  # Notifications (permissions requested explicitly)
   flutter_local_notifications: ^16.3.0
   timezone: ^0.9.2
   
@@ -30,6 +31,13 @@ dependencies:
   google_mlkit_text_recognition: ^0.16.0  # On-device prescription label OCR
   share_plus: ^7.2.1            # Share medication data
   
+  flutter_secure_storage: ^9.2.4
+  local_auth: ^2.3.0
+  flutter_timezone: 4.1.1
+  uuid: ^4.5.1
+  url_launcher: ^6.3.1
+  path_provider: ^2.1.5
+
   # Icons
   cupertino_icons: ^1.0.2       # iOS-style icons
 

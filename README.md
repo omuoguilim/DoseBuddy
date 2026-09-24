@@ -2,65 +2,39 @@
 
 # DoseBuddy
 
-A Flutter medication tracker for keeping daily schedules, dose records and symptom notes in one place. My first solo app, built around the everyday work of remembering medication and reviewing what happened.
+A local medication record and reminder app built with Flutter. Today, medication editing, calendar history, symptoms, exports and emergency information use one shared record store.
 
-## Project status
+The rebuild is the current implementation. See [pull request #1](https://github.com/omuoguilim/DoseBuddy/pull/1) for its development history.
 
-The default branch contains the original prototype. The coordinated rebuild is available in [pull request #1](https://github.com/omuoguilim/DoseBuddy/pull/1), which has not been merged. Its encrypted storage, device authentication and revised record system should not be assumed to exist on `main`.
+## Run
 
-The rebuild's analysis, 18 tests and iOS simulator build passed on its reviewed commit. Physical-device checks and production signing remain release requirements.
-
-## In the prototype
-
-- Medication entry, schedules and course details.
-- Dose logging, calendar history and as-needed records.
-- Symptom notes and medication-history views.
-- Local reminders and prescription-label text recognition.
-- Report and emergency-card screens.
-
-Some prototype controls are incomplete. Account, caregiver-sharing and drug-safety screens are not evidence of working cloud services or validated interaction checking. See [the rebuild](https://github.com/omuoguilim/DoseBuddy/pull/1) for the connected replacement workflows.
-
-## Built with
-
-Flutter and Dart; Hive for local records; SharedPreferences; local notifications; Google ML Kit text recognition; image picker and sharing plugins.
-
-## Run locally
-
-Install Flutter and the platform tooling for your device. The committed dependency lock requires a newer SDK than the minimum in the original pubspec; Flutter 3.47.2 was used for the rebuild checks.
+Use Flutter 3.47.2 and its bundled Dart SDK.
 
 ```sh
 git clone https://github.com/omuoguilim/DoseBuddy.git
 cd DoseBuddy
-flutter pub get
-flutter run
-```
-
-For iOS, use a Mac with Xcode, CocoaPods and a configured simulator or device. The Podfile targets iOS 15.5. Camera capture, notifications and authentication need device testing.
-
-To review the rebuild instead:
-
-```sh
-git fetch origin
-git switch --track origin/dosebuddy/release-rebuild
 flutter pub get
 flutter analyze --no-fatal-infos
 flutter test
 flutter run
 ```
 
-## Where to look
+On a Mac with Xcode, build the embedded-demo binary with:
 
-| Path on main | Purpose |
-| --- | --- |
-| `lib/models/` | Medication, dose and symptom records |
-| `lib/today_page.dart` | Daily medication view |
-| `lib/calendar_page.dart` | Calendar history |
-| `lib/services/` | Notification services |
-| `lib/prescription_capture_page.dart` | Prescription-label capture |
-| `assets/images/` | DoseBuddy brand assets |
+```sh
+flutter build ios --simulator --debug
+```
 
-The rebuild uses `lib/core/` and `lib/ui/` instead. Its [release review](https://github.com/omuoguilim/DoseBuddy/blob/dosebuddy/release-rebuild/RELEASE_REVIEW.md) documents migration and device checks.
+The GitHub workflow also builds a simulator artifact for Appetize. Source changes alone do not update the existing website emulator.
 
-## Limits
+## Product boundaries
 
-DoseBuddy is a record and reminder project, not a source of dosing instructions or medical advice. Scanned text needs manual verification. Use synthetic records when testing or demonstrating the prototype; do not post private medication information in public issues.
+Records are encrypted on the device. Optional device authentication protects access inside the app. There is no cloud account, caregiver sharing, interaction checker or dose recommendation service.
+
+Daily clock-time schedules and as-needed records are supported. Reminders queue at most 60 future doses over 30 days and must be refreshed by opening the app. Operating-system delivery is not guaranteed. Scanned text is an unverified draft and requires manual checking.
+
+Supply is an estimate. Updating the remaining quantity establishes a fresh baseline; correcting records from before that count does not change the new count. Manually reconcile supply again when necessary.
+
+## Release review
+
+Read [RELEASE_REVIEW.md](RELEASE_REVIEW.md) before distributing an upgrade. It documents migration limitations, physical-device checks, signing and store requirements. Merging the rebuild does not establish clinical validation or app-store approval. Physical-device validation and production signing remain release requirements.
