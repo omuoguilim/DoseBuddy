@@ -1,12 +1,18 @@
+<p align="center"><img src="assets/images/pill_bottle_logo.svg" alt="DoseBuddy logo" width="144"></p>
+
 # DoseBuddy
 
 A local medication record and reminder app built with Flutter. Today, medication editing, calendar history, symptoms, exports and emergency information use one shared record store.
+
+The rebuild is the current implementation. See [pull request #1](https://github.com/omuoguilim/DoseBuddy/pull/1) for its development history.
 
 ## Run
 
 Use Flutter 3.47.2 and its bundled Dart SDK.
 
 ```sh
+git clone https://github.com/omuoguilim/DoseBuddy.git
+cd DoseBuddy
 flutter pub get
 flutter analyze --no-fatal-infos
 flutter test
@@ -31,4 +37,4 @@ Supply is an estimate. Updating the remaining quantity establishes a fresh basel
 
 ## Release review
 
-Read [RELEASE_REVIEW.md](RELEASE_REVIEW.md) before distributing an upgrade. It documents migration limitations, physical-device checks, signing and store requirements. This branch is a review candidate, not a clinical validation or app-store approval claim.
+Read [RELEASE_REVIEW.md](RELEASE_REVIEW.md) before distributing an upgrade. It documents migration limitations, physical-device checks, signing and store requirements. Merging the rebuild does not establish clinical validation or app-store approval. Physical-device validation and production signing remain release requirements.

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640"><rect width="1280" height="640" fill="#17211F"/><rect x="0" y="0" width="1280" height="10" fill="#8877CF"/><ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 200 200" fill="none" x="74" y="160">
+  
+  <ns0:defs>
+    <ns0:linearGradient id="bottleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <ns0:stop offset="0%" style="stop-color:#5B67CA;stop-opacity:1" />
+      <ns0:stop offset="100%" style="stop-color:#9B8CE8;stop-opacity:1" />
+    </ns0:linearGradient>
+    <ns0:linearGradient id="capGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <ns0:stop offset="0%" style="stop-color:#9B8CE8;stop-opacity:1" />
+      <ns0:stop offset="100%" style="stop-color:#B8A5E8;stop-opacity:1" />
+    </ns0:linearGradient>
+    <ns0:linearGradient id="labelGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <ns0:stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.9" />
+      <ns0:stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.7" />
+    </ns0:linearGradient>
+  </ns0:defs>
+  
+  
+  <ns0:rect x="60" y="60" width="80" height="110" rx="8" fill="url(#bottleGradient)" />
+  
+  
+  <ns0:rect x="70" y="40" width="60" height="25" rx="6" fill="url(#capGradient)" />
+  <ns0:rect x="75" y="35" width="50" height="10" rx="5" fill="url(#capGradient)" />
+  
+  
+  <ns0:rect x="70" y="90" width="60" height="40" rx="4" fill="url(#labelGradient)" opacity="0.3" />
+  
+  
+  <ns0:circle cx="85" cy="130" r="8" fill="#ffffff" opacity="0.6" />
+  <ns0:circle cx="105" cy="135" r="8" fill="#ffffff" opacity="0.6" />
+  <ns0:circle cx="115" cy="125" r="8" fill="#ffffff" opacity="0.6" />
+  <ns0:circle cx="95" cy="145" r="8" fill="#ffffff" opacity="0.6" />
+  <ns0:circle cx="110" cy="150" r="8" fill="#ffffff" opacity="0.6" />
+  
+  
+  <ns0:rect x="95" y="103" width="3" height="14" rx="1.5" fill="#5B67CA" />
+  <ns0:rect x="88.5" y="109.5" width="16" height="3" rx="1.5" fill="#5B67CA" />
+  
+  
+  <ns0:rect x="120" y="65" width="12" height="60" rx="6" fill="#ffffff" opacity="0.2" />
+  
+  
+  <ns0:ellipse cx="100" cy="175" rx="35" ry="5" fill="#000000" opacity="0.1" />
+</ns0:svg><text x="424" y="290" fill="#FFFFFF" font-family="DejaVu Sans, sans-serif" font-weight="bold" font-size="68">DoseBuddy</text><text x="428" y="351" fill="#D9E3DF" font-family="DejaVu Sans, sans-serif" font-size="29">Medication records and reminders</text><text x="428" y="461" fill="#8877CF" font-family="DejaVu Sans, sans-serif" font-size="24">github.com/omuoguilim/DoseBuddy</text></svg>
