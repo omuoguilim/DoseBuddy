@@ -120,17 +120,36 @@ class _HomeState extends State<Home> {
         key: const PageStorageKey('today'),
         padding: const EdgeInsets.all(20),
         children: [
-          Text(dayKey(now), style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(height: 8),
-          Text(
-            due > 0
-                ? '$due dose${due == 1 ? '' : 's'} not recorded'
-                : upcoming > 0
-                ? '$upcoming dose${upcoming == 1 ? '' : 's'} later today'
-                : doses.isEmpty
-                ? 'No scheduled doses today'
-                : 'Today’s doses are recorded',
-            style: Theme.of(context).textTheme.headlineSmall,
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF5B67CA), Color(0xFF9B8CE8)],
+              ),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(dayKey(now), style: const TextStyle(color: Colors.white70)),
+                const SizedBox(height: 12),
+                Text(
+                  due > 0
+                      ? '$due dose${due == 1 ? '' : 's'} not recorded'
+                      : upcoming > 0
+                      ? '$upcoming dose${upcoming == 1 ? '' : 's'} later today'
+                      : doses.isEmpty
+                      ? 'No scheduled doses today'
+                      : 'Today’s doses are recorded',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
           if (widget.reminders.error != null) Notice(widget.reminders.error!),
           if (widget.reminders.through != null)
@@ -222,25 +241,34 @@ class _HomeState extends State<Home> {
   Widget doseRow(ScheduledDose d) {
     final status = widget.store.records.status(d, DateTime.now());
     final taken = status == 'Taken';
-    return Semantics(
-      button: true,
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(vertical: 10),
-        leading: Icon(
-          taken
-              ? Icons.check_circle_outline
-              : status == 'Skipped'
-              ? Icons.remove_circle_outline
-              : Icons.schedule,
-          color: ink,
+    return Card(
+      color: Colors.white,
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: Color(0xFFE4E7F2)),
+      ),
+      child: Semantics(
+        button: true,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+          leading: Icon(
+            taken
+                ? Icons.check_circle_outline
+                : status == 'Skipped'
+                ? Icons.remove_circle_outline
+                : Icons.schedule,
+            color: ink,
+          ),
+          title: Text(d.details['name'] as String),
+          subtitle: Text(
+            '${clockLabel(d.at.hour * 60 + d.at.minute)} · ${d.details['strength']}\n$status',
+          ),
+          isThreeLine: true,
+          trailing: const Icon(Icons.chevron_right),
+          onTap: widget.store.busy ? null : () => record(d),
         ),
-        title: Text(d.details['name'] as String),
-        subtitle: Text(
-          '${clockLabel(d.at.hour * 60 + d.at.minute)} · ${d.details['strength']}\n$status',
-        ),
-        isThreeLine: true,
-        trailing: const Icon(Icons.chevron_right),
-        onTap: widget.store.busy ? null : () => record(d),
       ),
     );
   }
