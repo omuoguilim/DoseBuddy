@@ -17,8 +17,10 @@ class ReminderPlan {
         .schedule(now, end)
         .where((d) => d.at.isAfter(now) && d.at.isBefore(end) && !r.outcomes.containsKey(d.key))
         .toList();
-    final selected = future.take(60).toList();
-    return ReminderPlan(selected, future.length > 60 ? selected.last.at : end);
+    final capacity = r.settings['followUp'] == true ? 30 : 60;
+    final selected = future.take(capacity).toList();
+    return ReminderPlan(selected,
+        future.length > capacity ? selected.last.at : end);
   }
 }
 
@@ -158,6 +160,23 @@ class Reminders extends ChangeNotifier {
           payload: dose.key,
         );
         count++;
+        if (r.settings['followUp'] == true) {
+          final delay = r.settings['followUpMinutes'] as int? ?? 15;
+          if (delay < 5 || delay > 60) {
+            throw StateError('Invalid follow-up interval.');
+          }
+          await plugin.zonedSchedule(
+            id++,
+            'DoseBuddy follow-up',
+            'If this dose is still unrecorded, open DoseBuddy to review it.',
+            local.add(Duration(minutes: delay)),
+            details(),
+            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
+            payload: dose.key,
+          );
+        }
       }
       through = plan.through;
       final renew = plan.through.subtract(const Duration(hours: 1));

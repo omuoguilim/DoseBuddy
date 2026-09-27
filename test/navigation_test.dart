@@ -88,6 +88,21 @@ void main() {
     expect(find.text('No scheduled doses due in this period yet.'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+  testWidgets('Today greets the saved profile name', (tester) async {
+    final data = Records.empty();
+    (data['settings'] as Map<String, dynamic>)['displayName'] = 'Oluchi';
+    final store = AppStore(data, (_) async {});
+    await tester.pumpWidget(MaterialApp(
+      theme: doseTheme(),
+      home: Home(
+        store: store,
+        reminders: Reminders(),
+        authenticate: () async => true,
+      ),
+    ));
+    expect(find.textContaining('Oluchi'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('empty Today remains usable with large text on a narrow screen', (
     tester,
   ) async {

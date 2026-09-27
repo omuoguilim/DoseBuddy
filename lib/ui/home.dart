@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+import 'package:table_calendar/table_calendar.dart';
 import '../core/records.dart';
 import '../core/store.dart';
 import '../core/reminders.dart';
@@ -9,6 +10,7 @@ import 'record_editor.dart';
 import 'settings.dart';
 import 'scan.dart';
 import 'insights.dart';
+import 'timeline.dart';
 
 class Home extends StatefulWidget {
   final AppStore store;
@@ -27,7 +29,8 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   int tab = 0;
   DateTime selected = DateTime.now();
-  bool showArchived = false;
+  DateTime focused = DateTime.now();
+  String medicationFilter = 'Active';
   Future<void> push(Widget child) => Navigator.of(
     context,
   ).push(MaterialPageRoute<void>(builder: (_) => child));
@@ -114,6 +117,14 @@ class _HomeState extends State<Home> {
     final upcoming = doses
         .where((d) => d.at.isAfter(now) && !r.outcomes.containsKey(d.key))
         .length;
+    final completed = doses.where((d) => r.status(d, now) == 'Taken').length;
+    final next = doses.where((d) => !r.outcomes.containsKey(d.key)).firstOrNull;
+    final displayName = (r.settings['displayName'] as String? ?? '').trim();
+    final greeting = now.hour < 12
+        ? 'Good morning'
+        : now.hour < 17
+        ? 'Good afternoon'
+        : 'Good evening';
     final prn = r.medications.entries.where((e) {
       final f = r.current(e.value as Json);
       return active(f) && (f['start'] as String).compareTo(dayKey(now)) <= 0 && f['type'] == 'as_needed';
@@ -142,6 +153,21 @@ class _HomeState extends State<Home> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(dayKey(now), style: const TextStyle(color: Colors.white70)),
+                const SizedBox(height: 8),
+                Text(
+                  displayName.isEmpty ? greeting : '$greeting, $displayName',
+                  style: const TextStyle(
+                    fontSize: 29,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+                if (displayName.isEmpty)
+                  TextButton(
+                    onPressed: () => setState(() => tab = 4),
+                    style: TextButton.styleFrom(foregroundColor: Colors.white),
+                    child: const Text('Add your name in Settings →'),
+                  ),
                 const SizedBox(height: 12),
                 Text(
                   due > 0
@@ -151,9 +177,7 @@ class _HomeState extends State<Home> {
                       : doses.isEmpty
                       ? 'No scheduled doses today'
                       : 'Today’s doses are recorded',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 16),
                 ),
               ],
             ),
@@ -167,12 +191,78 @@ class _HomeState extends State<Home> {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
+          const SizedBox(height: 16),
+          if (doses.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(children: [
+                SizedBox(
+                  height: 52,
+                  width: 52,
+                  child: Stack(alignment: Alignment.center, children: [
+                    CircularProgressIndicator(
+                      value: completed / doses.length,
+                      strokeWidth: 6,
+                      backgroundColor: const Color(0xFFEEEFFF),
+                    ),
+                    Text('$completed/${doses.length}',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                  ]),
+                ),
+                const SizedBox(width: 16),
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Daily progress',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+                    Text('$completed recorded taken · $upcoming upcoming',
+                        style: Theme.of(context).textTheme.bodySmall),
+                  ],
+                )),
+              ]),
+            ),
+          if (next != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEEEFFF),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('NEXT DOSE', style: TextStyle(
+                    color: ink, fontWeight: FontWeight.w800, letterSpacing: 1.1)),
+                const SizedBox(height: 12),
+                Text(next.details['name'] as String,
+                    style: const TextStyle(fontSize: 22,
+                        fontWeight: FontWeight.w800, color: deepInk)),
+                Text('${clockLabel(next.at.hour * 60 + next.at.minute)} · ${next.details['strength']}',
+                    style: const TextStyle(color: muted)),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: widget.store.busy ? null : () => record(next),
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: const Text('Review dose'),
+                ),
+              ]),
+            ),
+          ],
           const SizedBox(height: 24),
           if (doses.isEmpty && prn.isEmpty)
             const Text(
               'Add a medication using the directions on your prescription.',
             ),
-          ...doses.map(doseRow),
+          if (doses.isNotEmpty)
+            const Text('Today’s doses', style: TextStyle(
+                fontSize: 21, fontWeight: FontWeight.w800, color: deepInk)),
+          const SizedBox(height: 12),
+          ...doseGroup('Morning', doses.where((d) => d.at.hour < 12).toList()),
+          ...doseGroup('Afternoon', doses.where((d) => d.at.hour >= 12 && d.at.hour < 17).toList()),
+          ...doseGroup('Evening', doses.where((d) => d.at.hour >= 17).toList()),
           if (prn.isNotEmpty)
             Section(
               'As needed',
@@ -213,7 +303,7 @@ class _HomeState extends State<Home> {
           ...r.medications.entries
               .where((e) {
                 final m = e.value as Json;
-                return active(r.current(m)) &&
+                return r.settings['refillAlerts'] != false && active(r.current(m)) &&
                     m['supply'] != null &&
                     m['threshold'] != null &&
                     (m['supply'] as num) <= (m['threshold'] as num);
@@ -238,12 +328,28 @@ class _HomeState extends State<Home> {
                 icon: const Icon(Icons.edit_note),
                 label: const Text('Log symptom'),
               ),
+              OutlinedButton.icon(
+                onPressed: () => push(TimelinePage(store: widget.store)),
+                icon: const Icon(Icons.timeline_outlined),
+                label: const Text('Timeline'),
+              ),
             ],
           ),
         ],
       ),
     );
   }
+
+  List<Widget> doseGroup(String label, List<ScheduledDose> doses) => [
+    if (doses.isNotEmpty) ...[
+      Padding(
+        padding: const EdgeInsets.only(top: 16, bottom: 12),
+        child: Text(label, style: const TextStyle(
+            fontSize: 16, fontWeight: FontWeight.w800, color: ink)),
+      ),
+      ...doses.map(doseRow),
+    ],
+  ];
 
   Widget doseRow(ScheduledDose d) {
     final status = widget.store.records.status(d, DateTime.now());
@@ -283,7 +389,15 @@ class _HomeState extends State<Home> {
   Widget medications() {
     final r = widget.store.records;
     final entries = r.medications.entries
-        .where((e) => showArchived || active(r.current(e.value as Json)))
+        .where((e) {
+          final f = r.current(e.value as Json);
+          final isActive = active(f);
+          return medicationFilter == 'As needed'
+              ? isActive && f['type'] == 'as_needed'
+              : medicationFilter == 'Paused / ended'
+              ? !isActive
+              : isActive && f['type'] != 'as_needed';
+        })
         .toList();
     return ListView(
       key: const PageStorageKey('medications'),
@@ -295,33 +409,84 @@ class _HomeState extends State<Home> {
           label: const Text('Add medication'),
         ),
         const SizedBox(height: 12),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Show paused and ended courses'),
-          value: showArchived,
-          onChanged: (v) => setState(() => showArchived = v),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(children: [
+            for (final label in ['Active', 'As needed', 'Paused / ended'])
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(label),
+                  selected: medicationFilter == label,
+                  onSelected: (_) => setState(() => medicationFilter = label),
+                ),
+              ),
+          ]),
         ),
-        const Divider(),
+        const SizedBox(height: 18),
         if (entries.isEmpty) const Text('No medications in this view.'),
         ...entries.map((e) {
           final f = r.current(e.value as Json);
-          return ListTile(
-            contentPadding: const EdgeInsets.symmetric(vertical: 10),
-            title: Text(f['name'] as String),
-            subtitle: Text(
-              '${f['strength']} · ${f['amount']} ${f['unit']}\n${!active(f)
-                  ? 'Paused or ended'
-                  : f['type'] == 'as_needed'
-                  ? 'As needed'
-                  : (f['times'] as List).cast<int>().map(clockLabel).join(', ')}',
-            ),
-            isThreeLine: true,
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => push(
-              MedicationDetail(
+          final med = e.value as Json;
+          return Card(
+            color: Colors.white,
+            elevation: 0,
+            margin: const EdgeInsets.only(bottom: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () => push(MedicationDetail(
                 store: widget.store,
                 reminders: widget.reminders,
                 id: e.key,
+              )),
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    const CircleAvatar(
+                      backgroundColor: Color(0xFFEEEFFF),
+                      child: Icon(Icons.medication_outlined, color: ink),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(f['name'] as String, style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w800, color: deepInk)),
+                        Text('${f['strength']} · ${f['form']}',
+                            style: const TextStyle(color: muted)),
+                      ],
+                    )),
+                    const Icon(Icons.chevron_right),
+                  ]),
+                  const SizedBox(height: 14),
+                  Wrap(spacing: 8, runSpacing: 8, children: [
+                    Chip(label: Text(!active(f)
+                        ? 'Paused or ended'
+                        : f['type'] == 'as_needed'
+                        ? 'As needed'
+                        : (f['times'] as List).cast<int>().map(clockLabel).join(', '))),
+                    if (med['supply'] != null)
+                      Chip(label: Text('${med['supply']} ${f['unit']} remaining')),
+                    if ((f['food'] as String? ?? '').isNotEmpty &&
+                        f['food'] != 'No preference')
+                      Chip(label: Text(f['food'] as String)),
+                  ]),
+                  if ((f['reason'] as String? ?? '').isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text('For ${f['reason']}',
+                          style: const TextStyle(color: muted)),
+                    ),
+                  if (med['supply'] != null && med['threshold'] != null &&
+                      (med['supply'] as num) <= (med['threshold'] as num))
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8),
+                      child: Text('Running low · check your supply',
+                          style: TextStyle(color: Color(0xFF8A5A16))),
+                    ),
+                ]),
               ),
             ),
           );
@@ -383,11 +548,49 @@ class _HomeState extends State<Home> {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
-              CalendarDatePicker(
-                initialDate: selected,
-                firstDate: DateTime(2000),
-                lastDate: DateTime.now(),
-                onDateChanged: (date) => setState(() => selected = date),
+              TableCalendar<ScheduledDose>(
+                firstDay: DateTime(2000),
+                lastDay: DateTime(2100),
+                focusedDay: focused,
+                selectedDayPredicate: (date) => isSameDay(selected, date),
+                onDaySelected: (date, month) => setState(() {
+                  selected = date;
+                  focused = month;
+                }),
+                onPageChanged: (month) => setState(() => focused = month),
+                eventLoader: (date) => r.schedule(date, date),
+                calendarBuilders: CalendarBuilders<ScheduledDose>(
+                  markerBuilder: (context, date, events) {
+                    if (events.isEmpty) return null;
+                    final statuses = events.map((dose) => r.status(dose, DateTime.now()));
+                    final color = statuses.contains('Skipped')
+                        ? const Color(0xFFC65353)
+                        : statuses.every((status) => status == 'Taken')
+                        ? const Color(0xFF2E8B57)
+                        : statuses.contains('Upcoming')
+                        ? const Color(0xFFB7791F)
+                        : ink;
+                    return Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Container(
+                        width: 6, height: 6,
+                        margin: const EdgeInsets.only(bottom: 5),
+                        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                      ),
+                    );
+                  },
+                ),
+                calendarStyle: const CalendarStyle(
+                  selectedDecoration: BoxDecoration(
+                    color: ink, shape: BoxShape.circle,
+                  ),
+                  todayDecoration: BoxDecoration(
+                    color: Color(0xFF9B8CE8), shape: BoxShape.circle,
+                  ),
+                  markerDecoration: BoxDecoration(
+                    color: ink, shape: BoxShape.circle,
+                  ),
+                ),
               ),
             ],
           ),

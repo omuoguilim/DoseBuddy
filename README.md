@@ -11,7 +11,10 @@ DoseBuddy brings medication schedules, dose history and symptom notes into one p
 - **Plan your schedule:** add medications, daily reminder times, amounts and course dates, or keep as-needed records.
 - **Track doses:** record outcomes and correct a record if you made a mistake.
 - **Look back:** browse calendar history and add, edit or delete symptom notes.
+- **See your routine:** the Today screen has a named greeting, daily progress, your next dose and morning, afternoon and evening groups. Insights shows 7- and 30-day charts, time-of-day and medication breakdowns, and an explained score when dose times are available.
 - **Manage changes:** edit medications, pause or resume a course, and update your remaining supply.
+- **Keep useful context:** add a profile photo, save local Care Circle contacts, review the combined health timeline and share a 30-day doctor report.
+- **Set reminders:** choose private previews, an optional follow-up reminder and low-supply notices. Follow-ups are scheduled notifications, not confirmation that a dose was taken.
 - **Scan a label:** start with on-device text recognition, then review the draft and enter the medication details yourself.
 - **Export your records:** take your history with you and keep emergency information in the app.
 - **Control privacy:** use encrypted local records, optional device authentication and private reminder text.
@@ -25,12 +28,13 @@ Use made-up medication details for a demo.
 3. **Leave a note for later.** Add a sample symptom, then edit or delete it from the history.
 4. **Try the scanner on a sample label.** It gives you text to review rather than guessing a dose for you. Camera access depends on the device.
 5. **Check an export.** Export your test records and compare them with what you entered.
+6. **Explore the older features.** Add a name in Settings, look at the Today groups and Insights charts, add a Care Circle contact, then preview the doctor report. Contacts stay on this device; the report shares only when you tap Share.
 
 ## A part of the build worth looking at
 
 The rebuild uses one shared record store across the app. A corrected dose or a changed schedule affects more than one screen, so the history, reminders and counts need to agree about what happened.
 
-The rebuild is now on main. You can follow its development in [pull request #1](https://github.com/omuoguilim/DoseBuddy/pull/1).
+The record rebuild is documented in [pull request #1](https://github.com/omuoguilim/DoseBuddy/pull/1). The familiar screens and local feature restoration are in [pull request #2](https://github.com/omuoguilim/DoseBuddy/pull/2).
 
 ## Built with
 
@@ -59,7 +63,7 @@ The GitHub workflow also builds a simulator artifact for Appetize. Source change
 
 ## Product boundaries
 
-Records are encrypted on the device. Optional device authentication protects access inside the app. There is no cloud account, caregiver sharing, interaction checker or dose recommendation service.
+Records are encrypted on the device. Optional device authentication protects access inside the app. Care Circle is a local contact list: entering a number does not verify an account, send an invite or share records. There is no cloud account, caregiver sharing, interaction checker or dose recommendation service. The old sign-in and sharing controls did not provide those services either, so they were not restored as working features.
 
 Daily clock-time schedules and as-needed records are supported. Reminders queue at most 60 future doses over 30 days and must be refreshed by opening the app. Operating-system delivery is not guaranteed. Scanned text is an unverified draft and requires manual checking.
 

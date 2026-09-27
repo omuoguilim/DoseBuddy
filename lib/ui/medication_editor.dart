@@ -47,6 +47,7 @@ class _MedicationEditorState extends State<MedicationEditor> {
             'instructions': '',
             'food': 'No preference',
             'notes': '',
+            'gracePeriodMinutes': 30,
             'reason': '',
             'prescriber': '',
             'pharmacy': '',
@@ -286,6 +287,23 @@ class _MedicationEditorState extends State<MedicationEditor> {
                               },
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<int>(
+                    initialValue: [5, 15, 30, 45, 60].contains(value['gracePeriodMinutes'])
+                        ? value['gracePeriodMinutes'] as int
+                        : 30,
+                    decoration: const InputDecoration(
+                      labelText: 'On-time window for insights',
+                      helperText: 'For chart labels only. Follow your prescription for timing.',
+                      helperMaxLines: 2,
+                    ),
+                    items: [5, 15, 30, 45, 60]
+                        .map((minutes) => DropdownMenuItem(
+                          value: minutes, child: Text('$minutes minutes')))
+                        .toList(),
+                    onChanged: busy ? null : (minutes) => setState(
+                        () => value['gracePeriodMinutes'] = minutes),
                   ),
                   const SizedBox(height: 16),
                 ],
