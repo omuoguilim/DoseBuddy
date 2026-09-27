@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
-const ink = Color(0xFF193C34);
-const paper = Color(0xFFF4F5F2);
-const muted = Color(0xFF56665D);
+// The original DoseBuddy violet, carried across the rebuilt screens.
+const ink = Color(0xFF5B67CA);
+const paper = Color(0xFFF7F8FC);
+const muted = Color(0xFF718096);
+const deepInk = Color(0xFF1A1D2E);
 ThemeData doseTheme() => ThemeData(
   useMaterial3: true,
   colorScheme: ColorScheme.fromSeed(
@@ -16,12 +18,12 @@ ThemeData doseTheme() => ThemeData(
     headlineLarge: TextStyle(
       fontSize: 30,
       fontWeight: FontWeight.w600,
-      color: ink,
+      color: deepInk,
     ),
     headlineSmall: TextStyle(
       fontSize: 22,
       fontWeight: FontWeight.w600,
-      color: ink,
+      color: deepInk,
     ),
     titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
     titleMedium: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
@@ -31,34 +33,34 @@ ThemeData doseTheme() => ThemeData(
     labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
   ),
   appBarTheme: const AppBarTheme(
-    backgroundColor: paper,
-    foregroundColor: ink,
+    backgroundColor: ink,
+    foregroundColor: Colors.white,
     surfaceTintColor: Colors.transparent,
     centerTitle: false,
   ),
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
     fillColor: Colors.white,
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
     contentPadding: const EdgeInsets.all(16),
   ),
   filledButtonTheme: FilledButtonThemeData(
     style: FilledButton.styleFrom(
       minimumSize: const Size(48, 50),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
   ),
   outlinedButtonTheme: OutlinedButtonThemeData(
     style: OutlinedButton.styleFrom(
       minimumSize: const Size(48, 50),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
   ),
   navigationBarTheme: const NavigationBarThemeData(
     backgroundColor: Colors.white,
-    indicatorColor: Color(0xFFDDE8DB),
+    indicatorColor: Color(0xFFEEEFFF),
   ),
-  dividerTheme: const DividerThemeData(color: Color(0xFFD3DAD4), space: 24),
+  dividerTheme: const DividerThemeData(color: Color(0xFFE4E7F2), space: 24),
 );
 
 class Section extends StatelessWidget {
@@ -89,7 +91,7 @@ class Notice extends StatelessWidget {
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: const Color(0xFFF6E8C6),
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(16),
     ),
     child: Text(
       text,
