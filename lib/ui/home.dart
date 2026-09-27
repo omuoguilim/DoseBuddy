@@ -8,6 +8,7 @@ import 'medication_editor.dart';
 import 'record_editor.dart';
 import 'settings.dart';
 import 'scan.dart';
+import 'insights.dart';
 
 class Home extends StatefulWidget {
   final AppStore store;
@@ -50,7 +51,7 @@ class _HomeState extends State<Home> {
     animation: Listenable.merge([widget.store, widget.reminders]),
     builder: (context, _) => Scaffold(
       appBar: AppBar(
-        title: Text(['Today', 'Medications', 'History', 'Settings'][tab]),
+        title: Text(['Today', 'Medications', 'Insights', 'History', 'Settings'][tab]),
         actions: tab == 1
             ? [
                 IconButton(
@@ -69,6 +70,8 @@ class _HomeState extends State<Home> {
             : tab == 1
             ? medications()
             : tab == 2
+            ? InsightsPage(store: widget.store)
+            : tab == 3
             ? history()
             : SettingsPage(
                 store: widget.store,
@@ -87,6 +90,10 @@ class _HomeState extends State<Home> {
           NavigationDestination(
             icon: Icon(Icons.medication_outlined),
             label: 'Medications',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.bar_chart_rounded),
+            label: 'Insights',
           ),
           NavigationDestination(icon: Icon(Icons.history), label: 'History'),
           NavigationDestination(
