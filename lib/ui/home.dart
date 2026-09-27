@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+import 'package:table_calendar/table_calendar.dart';
 import '../core/records.dart';
 import '../core/store.dart';
 import '../core/reminders.dart';
@@ -28,7 +29,8 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   int tab = 0;
   DateTime selected = DateTime.now();
-  bool showArchived = false;
+  DateTime focused = DateTime.now();
+  String medicationFilter = 'Active';
   Future<void> push(Widget child) => Navigator.of(
     context,
   ).push(MaterialPageRoute<void>(builder: (_) => child));
@@ -301,7 +303,7 @@ class _HomeState extends State<Home> {
           ...r.medications.entries
               .where((e) {
                 final m = e.value as Json;
-                return active(r.current(m)) &&
+                return r.settings['refillAlerts'] != false && active(r.current(m)) &&
                     m['supply'] != null &&
                     m['threshold'] != null &&
                     (m['supply'] as num) <= (m['threshold'] as num);
@@ -387,7 +389,15 @@ class _HomeState extends State<Home> {
   Widget medications() {
     final r = widget.store.records;
     final entries = r.medications.entries
-        .where((e) => showArchived || active(r.current(e.value as Json)))
+        .where((e) {
+          final f = r.current(e.value as Json);
+          final isActive = active(f);
+          return medicationFilter == 'As needed'
+              ? isActive && f['type'] == 'as_needed'
+              : medicationFilter == 'Paused / ended'
+              ? !isActive
+              : isActive && f['type'] != 'as_needed';
+        })
         .toList();
     return ListView(
       key: const PageStorageKey('medications'),
@@ -399,33 +409,84 @@ class _HomeState extends State<Home> {
           label: const Text('Add medication'),
         ),
         const SizedBox(height: 12),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Show paused and ended courses'),
-          value: showArchived,
-          onChanged: (v) => setState(() => showArchived = v),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(children: [
+            for (final label in ['Active', 'As needed', 'Paused / ended'])
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(label),
+                  selected: medicationFilter == label,
+                  onSelected: (_) => setState(() => medicationFilter = label),
+                ),
+              ),
+          ]),
         ),
-        const Divider(),
+        const SizedBox(height: 18),
         if (entries.isEmpty) const Text('No medications in this view.'),
         ...entries.map((e) {
           final f = r.current(e.value as Json);
-          return ListTile(
-            contentPadding: const EdgeInsets.symmetric(vertical: 10),
-            title: Text(f['name'] as String),
-            subtitle: Text(
-              '${f['strength']} · ${f['amount']} ${f['unit']}\n${!active(f)
-                  ? 'Paused or ended'
-                  : f['type'] == 'as_needed'
-                  ? 'As needed'
-                  : (f['times'] as List).cast<int>().map(clockLabel).join(', ')}',
-            ),
-            isThreeLine: true,
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => push(
-              MedicationDetail(
+          final med = e.value as Json;
+          return Card(
+            color: Colors.white,
+            elevation: 0,
+            margin: const EdgeInsets.only(bottom: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () => push(MedicationDetail(
                 store: widget.store,
                 reminders: widget.reminders,
                 id: e.key,
+              )),
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    const CircleAvatar(
+                      backgroundColor: Color(0xFFEEEFFF),
+                      child: Icon(Icons.medication_outlined, color: ink),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(f['name'] as String, style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w800, color: deepInk)),
+                        Text('${f['strength']} · ${f['form']}',
+                            style: const TextStyle(color: muted)),
+                      ],
+                    )),
+                    const Icon(Icons.chevron_right),
+                  ]),
+                  const SizedBox(height: 14),
+                  Wrap(spacing: 8, runSpacing: 8, children: [
+                    Chip(label: Text(!active(f)
+                        ? 'Paused or ended'
+                        : f['type'] == 'as_needed'
+                        ? 'As needed'
+                        : (f['times'] as List).cast<int>().map(clockLabel).join(', '))),
+                    if (med['supply'] != null)
+                      Chip(label: Text('${med['supply']} ${f['unit']} remaining')),
+                    if ((f['food'] as String? ?? '').isNotEmpty &&
+                        f['food'] != 'No preference')
+                      Chip(label: Text(f['food'] as String)),
+                  ]),
+                  if ((f['reason'] as String? ?? '').isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text('For ${f['reason']}',
+                          style: const TextStyle(color: muted)),
+                    ),
+                  if (med['supply'] != null && med['threshold'] != null &&
+                      (med['supply'] as num) <= (med['threshold'] as num))
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8),
+                      child: Text('Running low · check your supply',
+                          style: TextStyle(color: Color(0xFF8A5A16))),
+                    ),
+                ]),
               ),
             ),
           );
@@ -487,11 +548,49 @@ class _HomeState extends State<Home> {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
-              CalendarDatePicker(
-                initialDate: selected,
-                firstDate: DateTime(2000),
-                lastDate: DateTime.now(),
-                onDateChanged: (date) => setState(() => selected = date),
+              TableCalendar<ScheduledDose>(
+                firstDay: DateTime(2000),
+                lastDay: DateTime(2100),
+                focusedDay: focused,
+                selectedDayPredicate: (date) => isSameDay(selected, date),
+                onDaySelected: (date, month) => setState(() {
+                  selected = date;
+                  focused = month;
+                }),
+                onPageChanged: (month) => setState(() => focused = month),
+                eventLoader: (date) => r.schedule(date, date),
+                calendarBuilders: CalendarBuilders<ScheduledDose>(
+                  markerBuilder: (context, date, events) {
+                    if (events.isEmpty) return null;
+                    final statuses = events.map((dose) => r.status(dose, DateTime.now()));
+                    final color = statuses.contains('Skipped')
+                        ? const Color(0xFFC65353)
+                        : statuses.every((status) => status == 'Taken')
+                        ? const Color(0xFF2E8B57)
+                        : statuses.contains('Upcoming')
+                        ? const Color(0xFFB7791F)
+                        : ink;
+                    return Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Container(
+                        width: 6, height: 6,
+                        margin: const EdgeInsets.only(bottom: 5),
+                        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                      ),
+                    );
+                  },
+                ),
+                calendarStyle: const CalendarStyle(
+                  selectedDecoration: BoxDecoration(
+                    color: ink, shape: BoxShape.circle,
+                  ),
+                  todayDecoration: BoxDecoration(
+                    color: Color(0xFF9B8CE8), shape: BoxShape.circle,
+                  ),
+                  markerDecoration: BoxDecoration(
+                    color: ink, shape: BoxShape.circle,
+                  ),
+                ),
               ),
             ],
           ),

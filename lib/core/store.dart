@@ -70,13 +70,27 @@ class AppStore extends ChangeNotifier {
     final decoded = jsonDecode(box.get('state')!) as Json;
     if (decoded['schema'] != 2)
       throw StateError('Unsupported data version. No records were changed.');
+    // The first rebuild kept legacy Care Circle entries in the audit log.
+    // Recover them for installations that already passed through that migration.
+    if (decoded['careContacts'] == null) {
+      final legacyContacts = (decoded['audit'] as List).where((raw) =>
+          raw is Map && raw['action'] ==
+              'legacy local care contacts preserved; no sharing active');
+      decoded['careContacts'] = legacyContacts.isEmpty
+          ? <dynamic>[]
+          : copyJson({'contacts': legacyContacts.first['contacts']})['contacts'];
+      await box.put('state', jsonEncode(decoded));
+      await box.flush();
+    }
     // Retry cleanup after interrupted migration, only after verified commit.
     for (final name in ['medications', 'dose_events', 'symptom_events']) {
       if (await Hive.boxExists(name)) await Hive.deleteBoxFromDisk(name);
     }
     final prefs = await SharedPreferences.getInstance();
     final oldImage = prefs.getString('profile_image');
-    if (oldImage != null) {
+    if (oldImage != null &&
+        (decoded['settings'] as Json)['profileImage'] is String &&
+        ((decoded['settings'] as Json)['profileImage'] as String).isNotEmpty) {
       final roots = [
         await getTemporaryDirectory(),
         await getApplicationDocumentsDirectory(),
@@ -127,6 +141,7 @@ class AppStore extends ChangeNotifier {
           'instructions': m.instructions,
           'food': m.foodInstruction,
           'notes': m.notes,
+          'gracePeriodMinutes': m.gracePeriodMinutes,
           'reason': m.reason,
           'prescriber': m.prescriber,
           'pharmacy': m.pharmacy,
@@ -247,17 +262,37 @@ class AppStore extends ChangeNotifier {
     if (legacyName != null && legacyName.isNotEmpty && legacyName != 'User') {
       r.settings['displayName'] = legacyName;
     }
+    final oldImage = prefs.getString('profile_image');
+    if (oldImage != null) {
+      final roots = [
+        await getTemporaryDirectory(),
+        await getApplicationDocumentsDirectory(),
+        await getApplicationSupportDirectory(),
+      ];
+      if (roots.any((root) => oldImage.startsWith('${root.path}/'))) {
+        final file = File(oldImage);
+        if (await file.exists() && await file.length() <= 8 * 1024 * 1024) {
+          r.settings['profileImage'] = base64Encode(await file.readAsBytes());
+        } else {
+          (data['migrationNotes'] as List).add(
+            'The old profile photo was too large or unavailable to import. Choose a new photo in Settings.',
+          );
+        }
+      }
+    }
     data['emergency'] = {
       'allergies': prefs.getString('emergency_allergies') ?? '',
       'contact': prefs.getString('emergency_contact') ?? '',
       'notes': prefs.getString('emergency_notes') ?? '',
     };
     final people = prefs.getString('care_circle');
-    if (people != null)
+    if (people != null) {
+      data['careContacts'] = jsonDecode(people) as List;
       (data['audit'] as List).add({
         'action': 'legacy local care contacts preserved; no sharing active',
         'contacts': jsonDecode(people),
       });
+    }
     return jsonDecode(
           jsonEncode(
             data,

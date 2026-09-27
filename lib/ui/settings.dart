@@ -4,10 +4,15 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:image_picker/image_picker.dart';
 import '../core/records.dart';
 import '../core/store.dart';
 import '../core/reminders.dart';
 import 'theme.dart';
+import 'doctor_report.dart';
+import 'timeline.dart';
+import 'scan.dart';
+import 'care_circle.dart';
 
 const privacyText = '''DoseBuddy privacy notice
 
@@ -101,6 +106,50 @@ class SettingsPage extends StatelessWidget {
     }
   }
 
+  Future<void> editPhoto(BuildContext context) async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (sheetContext) => SafeArea(child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.camera_alt_outlined),
+            title: const Text('Take photo'),
+            onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library_outlined),
+            title: const Text('Choose from library'),
+            onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
+          ),
+        ],
+      )),
+    );
+    if (source == null) return;
+    try {
+      final photo = await ImagePicker().pickImage(
+        source: source, maxWidth: 512, maxHeight: 512, imageQuality: 70,
+      );
+      if (photo == null) return;
+      final bytes = await photo.readAsBytes();
+      if (bytes.length > 8 * 1024 * 1024) {
+        throw StateError('Please choose a smaller photo.');
+      }
+      await store.update((r) => r.settings['profileImage'] = base64Encode(bytes));
+    } catch (e) {
+      if (context.mounted) showError(context, e);
+    }
+  }
+
+  Future<void> setFollowUpMinutes(BuildContext context, int minutes) async {
+    try {
+      await store.update((r) => r.settings['followUpMinutes'] = minutes);
+      await reminders.sync(store.records);
+    } catch (e) {
+      if (context.mounted) showError(context, e);
+    }
+  }
+
   void textPage(BuildContext context, String title, String text) =>
       Navigator.push(
         context,
@@ -122,15 +171,35 @@ class SettingsPage extends StatelessWidget {
       children: [
         Section(
           'Your profile',
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.person_outline, color: ink),
-            title: Text((settings['displayName'] as String? ?? '').isEmpty
-                ? 'Add your name'
-                : settings['displayName'] as String),
-            subtitle: const Text('Used in your daily greeting. Stored on this device.'),
-            trailing: const Icon(Icons.edit_outlined),
-            onTap: store.busy ? null : () => editName(context),
+          Column(
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: CircleAvatar(
+                  backgroundColor: const Color(0xFFEEEFFF),
+                  backgroundImage: (settings['profileImage'] as String? ?? '').isEmpty
+                      ? null
+                      : MemoryImage(base64Decode(settings['profileImage'] as String)),
+                  child: (settings['profileImage'] as String? ?? '').isEmpty
+                      ? const Icon(Icons.person_outline, color: ink)
+                      : null,
+                ),
+                title: Text((settings['displayName'] as String? ?? '').isEmpty
+                    ? 'Add your name'
+                    : settings['displayName'] as String),
+                subtitle: const Text('Used in your daily greeting.'),
+                trailing: const Icon(Icons.edit_outlined),
+                onTap: store.busy ? null : () => editName(context),
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: store.busy ? null : () => editPhoto(context),
+                  icon: const Icon(Icons.add_a_photo_outlined),
+                  label: const Text('Change profile photo'),
+                ),
+              ),
+            ],
           ),
         ),
         const Section(
@@ -198,6 +267,46 @@ class SettingsPage extends StatelessWidget {
               ),
             ],
           ),
+        ),
+        Section(
+          'Routine tools',
+          Column(children: [
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Follow-up reminders'),
+              subtitle: const Text(
+                'Queue a second reminder if a scheduled dose is still unrecorded. Recording a dose cancels its follow-up.',
+              ),
+              value: settings['followUp'] == true,
+              onChanged: store.busy || reminders.syncing
+                  ? null : (value) => change(context, 'followUp', value),
+            ),
+            if (settings['followUp'] == true)
+              DropdownButtonFormField<int>(
+                initialValue: [5, 15, 30, 45, 60].contains(settings['followUpMinutes'])
+                    ? settings['followUpMinutes'] as int : 15,
+                decoration: const InputDecoration(labelText: 'Follow up after'),
+                items: [5, 15, 30, 45, 60]
+                    .map((value) => DropdownMenuItem(
+                        value: value, child: Text('$value minutes')))
+                    .toList(),
+                onChanged: store.busy || reminders.syncing
+                    ? null : (value) {
+                        if (value != null) setFollowUpMinutes(context, value);
+                      },
+              ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Refill alerts'),
+              subtitle: const Text('Show low-supply notices on Today.'),
+              value: settings['refillAlerts'] != false,
+              onChanged: store.busy
+                  ? null : (value) => change(context, 'refillAlerts', value),
+            ),
+            const Notice(
+              'Travel: reminders use the device’s current local clock. If you change time zones, open DoseBuddy to refresh and check the timing with your pharmacist or clinician. No home-time conversion is applied.',
+            ),
+          ]),
         ),
         Section(
           'Privacy',
@@ -309,6 +418,51 @@ class SettingsPage extends StatelessWidget {
               ),
             ],
           ),
+        ),
+        Section(
+          'Health tools',
+          Column(children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.group_outlined, color: ink),
+              title: const Text('Care Circle'),
+              subtitle: const Text('Save trusted contacts on this device.'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.push(context, MaterialPageRoute<void>(
+                builder: (_) => CareCirclePage(store: store),
+              )),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.timeline_outlined, color: ink),
+              title: const Text('Health timeline'),
+              subtitle: const Text('See recorded doses and symptoms together.'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.push(context, MaterialPageRoute<void>(
+                builder: (_) => TimelinePage(store: store),
+              )),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.description_outlined, color: ink),
+              title: const Text('Doctor report'),
+              subtitle: const Text('Review and share a 30-day summary.'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.push(context, MaterialPageRoute<void>(
+                builder: (_) => DoctorReportPage(store: store),
+              )),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.document_scanner_outlined, color: ink),
+              title: const Text('Scan prescription label'),
+              subtitle: const Text('Verify the extracted details before saving.'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.push(context, MaterialPageRoute<void>(
+                builder: (_) => ScanPage(store: store, reminders: reminders),
+              )),
+            ),
+          ]),
         ),
         OutlinedButton.icon(
           onPressed: () async {

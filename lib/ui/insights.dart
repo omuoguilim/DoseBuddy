@@ -26,6 +26,21 @@ class _InsightsPageState extends State<InsightsPage> {
     final taken = due.where((d) => records.status(d, now) == 'Taken').length;
     final skipped = due.where((d) => records.status(d, now) == 'Skipped').length;
     final rate = due.isEmpty ? 0.0 : taken / due.length;
+    final timed = due.where((dose) {
+      final outcome = records.outcomes[dose.key] as Json?;
+      return outcome?['status'] == 'Taken' && outcome?['takenAt'] is String;
+    }).toList();
+    final onTime = timed.where((dose) {
+      final outcome = records.outcomes[dose.key] as Json;
+      final actual = DateTime.tryParse(outcome['takenAt'] as String);
+      final window = dose.details['gracePeriodMinutes'] is int
+          ? dose.details['gracePeriodMinutes'] as int : 30;
+      return actual != null &&
+          !actual.isAfter(dose.at.add(Duration(minutes: window)));
+    }).length;
+    final onTimeRate = timed.isEmpty ? null : onTime / timed.length;
+    final score = onTimeRate == null
+        ? null : ((rate * 0.8 + onTimeRate * 0.2) * 100).round();
     final dates = List.generate(days, (i) => DateTime(first.year, first.month, first.day + i));
     final byMedication = <String, List<ScheduledDose>>{};
     for (final dose in due) {
@@ -62,10 +77,11 @@ class _InsightsPageState extends State<InsightsPage> {
             borderRadius: BorderRadius.circular(26),
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('RECORDED TAKEN', style: TextStyle(
+            Text(score == null ? 'RECORDED TAKEN' : 'DOSEBUDDY SCORE', style: const TextStyle(
                 color: Colors.white70, letterSpacing: 1.1, fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
-            Text(due.isEmpty ? '—' : '${(rate * 100).round()}%',
+            Text(due.isEmpty ? '—' : score == null
+                ? '${(rate * 100).round()}%' : '$score/100',
                 style: const TextStyle(color: Colors.white, fontSize: 54,
                     height: 1, fontWeight: FontWeight.w800)),
             const SizedBox(height: 10),
@@ -73,11 +89,16 @@ class _InsightsPageState extends State<InsightsPage> {
                 ? 'No scheduled doses due in this period yet.'
                 : '$taken of ${due.length} scheduled doses due · $skipped skipped',
                 style: const TextStyle(color: Colors.white)),
+            if (score != null) ...[
+              const SizedBox(height: 8),
+              const Text('80% recorded completion + 20% on-time records. A routine summary, not a health score.',
+                  style: TextStyle(fontSize: 12, color: Colors.white70)),
+            ],
             const SizedBox(height: 18),
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
-                value: rate,
+                value: score == null ? rate : score / 100,
                 minHeight: 9,
                 backgroundColor: Colors.white24,
                 valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
@@ -87,13 +108,31 @@ class _InsightsPageState extends State<InsightsPage> {
         ),
         const SizedBox(height: 16),
         Row(children: [
-          Expanded(child: _metric('$taken', 'Taken', Icons.check_circle_outline)),
+          Expanded(child: _metric('${(rate * 100).round()}%',
+              'Recorded', Icons.check_circle_outline)),
+          const SizedBox(width: 10),
+          Expanded(child: _metric(onTimeRate == null ? '—' : '${(onTimeRate * 100).round()}%',
+              'On time', Icons.schedule_outlined)),
           const SizedBox(width: 10),
           Expanded(child: _metric('$skipped', 'Skipped', Icons.remove_circle_outline)),
-          const SizedBox(width: 10),
-          Expanded(child: _metric('${due.length - taken - skipped}',
-              'Not recorded', Icons.schedule)),
         ]),
+        if (timed.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text('On-time rate uses $onTime of ${timed.length} taken doses with a recorded time.',
+                style: const TextStyle(fontSize: 12, color: muted)),
+          ),
+        const SizedBox(height: 26),
+        const Text('By time of day', style: TextStyle(
+            fontSize: 21, fontWeight: FontWeight.w800, color: deepInk)),
+        const SizedBox(height: 12),
+        _surface(Column(children: [
+          _timeRow('Morning', due.where((d) => d.at.hour < 12).toList(), records, now),
+          const SizedBox(height: 16),
+          _timeRow('Afternoon', due.where((d) => d.at.hour >= 12 && d.at.hour < 17).toList(), records, now),
+          const SizedBox(height: 16),
+          _timeRow('Evening', due.where((d) => d.at.hour >= 17).toList(), records, now),
+        ])),
         const SizedBox(height: 28),
         const Text('Recent days', style: TextStyle(
             fontSize: 21, fontWeight: FontWeight.w800, color: deepInk)),
@@ -180,6 +219,28 @@ class _InsightsPageState extends State<InsightsPage> {
         borderRadius: BorderRadius.circular(20)),
     child: content,
   );
+
+  Widget _timeRow(String title, List<ScheduledDose> doses,
+      Records records, DateTime now) {
+    final taken = doses.where((d) => records.status(d, now) == 'Taken').length;
+    return Row(children: [
+      SizedBox(width: 82, child: Text(title,
+          style: const TextStyle(fontWeight: FontWeight.w700, color: deepInk))),
+      Expanded(child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: LinearProgressIndicator(
+          value: doses.isEmpty ? 0 : taken / doses.length,
+          minHeight: 9,
+          backgroundColor: const Color(0xFFEEEFFF),
+          valueColor: const AlwaysStoppedAnimation<Color>(ink),
+        ),
+      )),
+      const SizedBox(width: 10),
+      SizedBox(width: 46, child: Text(doses.isEmpty
+          ? '—' : '$taken/${doses.length}', textAlign: TextAlign.end,
+          style: const TextStyle(fontWeight: FontWeight.w700, color: ink))),
+    ]);
+  }
 
   Widget _metric(String value, String label, IconData icon) => Container(
     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 5),

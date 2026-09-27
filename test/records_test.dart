@@ -197,6 +197,9 @@ void main() {
     final now = DateTime(2026, 9, 1);
     final p = ReminderPlan.create(r, now);
     expect(p.doses.length, 60);
+    r.settings['followUp'] = true;
+    expect(ReminderPlan.create(r, now).doses.length, 30);
+    r.settings['followUp'] = false;
     r.record(p.doses.first, status: 'Skipped', now: now);
     expect(
       ReminderPlan.create(r, now).doses.any((d) => d.key == p.doses.first.key),
