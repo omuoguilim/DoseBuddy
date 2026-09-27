@@ -63,6 +63,26 @@ void main() {
     expect(find.text('Review and export records'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+  testWidgets('insights is reachable without any medication records', (
+    tester,
+  ) async {
+    final store = AppStore(Records.empty(), (_) async {});
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: doseTheme(),
+        home: Home(
+          store: store,
+          reminders: Reminders(),
+          authenticate: () async => true,
+        ),
+      ),
+    );
+    await tester.tap(find.text('Insights'));
+    await tester.pumpAndSettle();
+    expect(find.text('Your routine, at a glance'), findsOneWidget);
+    expect(find.text('No scheduled doses due in this period yet.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('empty Today remains usable with large text on a narrow screen', (
     tester,
   ) async {
