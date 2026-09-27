@@ -65,6 +65,42 @@ class SettingsPage extends StatelessWidget {
     }
   }
 
+  Future<void> editName(BuildContext context) async {
+    final controller = TextEditingController(
+      text: store.records.settings['displayName'] as String? ?? '',
+    );
+    final name = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('What should DoseBuddy call you?'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          maxLength: 40,
+          decoration: const InputDecoration(labelText: 'Your name'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (name == null || name.isEmpty) return;
+    try {
+      await store.update((r) => r.settings['displayName'] = name);
+    } catch (e) {
+      if (context.mounted) showError(context, e);
+    }
+  }
+
   void textPage(BuildContext context, String title, String text) =>
       Navigator.push(
         context,
@@ -84,6 +120,19 @@ class SettingsPage extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
+        Section(
+          'Your profile',
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.person_outline, color: ink),
+            title: Text((settings['displayName'] as String? ?? '').isEmpty
+                ? 'Add your name'
+                : settings['displayName'] as String),
+            subtitle: const Text('Used in your daily greeting. Stored on this device.'),
+            trailing: const Icon(Icons.edit_outlined),
+            onTap: store.busy ? null : () => editName(context),
+          ),
+        ),
         const Section(
           'On this device',
           Text('Your records stay here. No account or subscription is needed.'),

@@ -26,6 +26,7 @@ void main() {
       });
       SharedPreferences.setMockInitialValues({
         'emergency_allergies': 'Example allergy',
+        'user_name': 'Oluchi',
       });
       final date = DateTime(2026, 9, 1, 8);
       final meds = await Hive.openBox<Medication>('medications');
@@ -86,6 +87,7 @@ void main() {
       expect(r.medications['m']['supply'], 12);
       expect(data['symptoms']['s']['name'], 'Headache');
       expect(data['emergency']['allergies'], 'Example allergy');
+      expect(r.settings['displayName'], 'Oluchi');
       expect(
         (data['audit'] as List).any((a) => a['notes'] == 'Preserve this too'),
         true,

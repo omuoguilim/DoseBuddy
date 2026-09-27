@@ -52,6 +52,7 @@ class Records {
       'reminders': false,
       'privateNotifications': true,
       'appLock': false,
+      'displayName': '',
     },
     'emergency': {'allergies': '', 'contact': '', 'notes': ''},
     'migrationNotes': <dynamic>[],

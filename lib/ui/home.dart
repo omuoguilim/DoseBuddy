@@ -9,6 +9,7 @@ import 'record_editor.dart';
 import 'settings.dart';
 import 'scan.dart';
 import 'insights.dart';
+import 'timeline.dart';
 
 class Home extends StatefulWidget {
   final AppStore store;
@@ -114,6 +115,14 @@ class _HomeState extends State<Home> {
     final upcoming = doses
         .where((d) => d.at.isAfter(now) && !r.outcomes.containsKey(d.key))
         .length;
+    final completed = doses.where((d) => r.status(d, now) == 'Taken').length;
+    final next = doses.where((d) => !r.outcomes.containsKey(d.key)).firstOrNull;
+    final displayName = (r.settings['displayName'] as String? ?? '').trim();
+    final greeting = now.hour < 12
+        ? 'Good morning'
+        : now.hour < 17
+        ? 'Good afternoon'
+        : 'Good evening';
     final prn = r.medications.entries.where((e) {
       final f = r.current(e.value as Json);
       return active(f) && (f['start'] as String).compareTo(dayKey(now)) <= 0 && f['type'] == 'as_needed';
@@ -142,6 +151,21 @@ class _HomeState extends State<Home> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(dayKey(now), style: const TextStyle(color: Colors.white70)),
+                const SizedBox(height: 8),
+                Text(
+                  displayName.isEmpty ? greeting : '$greeting, $displayName',
+                  style: const TextStyle(
+                    fontSize: 29,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+                if (displayName.isEmpty)
+                  TextButton(
+                    onPressed: () => setState(() => tab = 4),
+                    style: TextButton.styleFrom(foregroundColor: Colors.white),
+                    child: const Text('Add your name in Settings →'),
+                  ),
                 const SizedBox(height: 12),
                 Text(
                   due > 0
@@ -151,9 +175,7 @@ class _HomeState extends State<Home> {
                       : doses.isEmpty
                       ? 'No scheduled doses today'
                       : 'Today’s doses are recorded',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 16),
                 ),
               ],
             ),
@@ -167,12 +189,78 @@ class _HomeState extends State<Home> {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
+          const SizedBox(height: 16),
+          if (doses.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(children: [
+                SizedBox(
+                  height: 52,
+                  width: 52,
+                  child: Stack(alignment: Alignment.center, children: [
+                    CircularProgressIndicator(
+                      value: completed / doses.length,
+                      strokeWidth: 6,
+                      backgroundColor: const Color(0xFFEEEFFF),
+                    ),
+                    Text('$completed/${doses.length}',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                  ]),
+                ),
+                const SizedBox(width: 16),
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Daily progress',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+                    Text('$completed recorded taken · $upcoming upcoming',
+                        style: Theme.of(context).textTheme.bodySmall),
+                  ],
+                )),
+              ]),
+            ),
+          if (next != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEEEFFF),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('NEXT DOSE', style: TextStyle(
+                    color: ink, fontWeight: FontWeight.w800, letterSpacing: 1.1)),
+                const SizedBox(height: 12),
+                Text(next.details['name'] as String,
+                    style: const TextStyle(fontSize: 22,
+                        fontWeight: FontWeight.w800, color: deepInk)),
+                Text('${clockLabel(next.at.hour * 60 + next.at.minute)} · ${next.details['strength']}',
+                    style: const TextStyle(color: muted)),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: widget.store.busy ? null : () => record(next),
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: const Text('Review dose'),
+                ),
+              ]),
+            ),
+          ],
           const SizedBox(height: 24),
           if (doses.isEmpty && prn.isEmpty)
             const Text(
               'Add a medication using the directions on your prescription.',
             ),
-          ...doses.map(doseRow),
+          if (doses.isNotEmpty)
+            const Text('Today’s doses', style: TextStyle(
+                fontSize: 21, fontWeight: FontWeight.w800, color: deepInk)),
+          const SizedBox(height: 12),
+          ...doseGroup('Morning', doses.where((d) => d.at.hour < 12).toList()),
+          ...doseGroup('Afternoon', doses.where((d) => d.at.hour >= 12 && d.at.hour < 17).toList()),
+          ...doseGroup('Evening', doses.where((d) => d.at.hour >= 17).toList()),
           if (prn.isNotEmpty)
             Section(
               'As needed',
@@ -238,12 +326,28 @@ class _HomeState extends State<Home> {
                 icon: const Icon(Icons.edit_note),
                 label: const Text('Log symptom'),
               ),
+              OutlinedButton.icon(
+                onPressed: () => push(TimelinePage(store: widget.store)),
+                icon: const Icon(Icons.timeline_outlined),
+                label: const Text('Timeline'),
+              ),
             ],
           ),
         ],
       ),
     );
   }
+
+  List<Widget> doseGroup(String label, List<ScheduledDose> doses) => [
+    if (doses.isNotEmpty) ...[
+      Padding(
+        padding: const EdgeInsets.only(top: 16, bottom: 12),
+        child: Text(label, style: const TextStyle(
+            fontSize: 16, fontWeight: FontWeight.w800, color: ink)),
+      ),
+      ...doses.map(doseRow),
+    ],
+  ];
 
   Widget doseRow(ScheduledDose d) {
     final status = widget.store.records.status(d, DateTime.now());

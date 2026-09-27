@@ -243,6 +243,10 @@ class AppStore extends ChangeNotifier {
       await box.close();
     }
     final prefs = await SharedPreferences.getInstance();
+    final legacyName = prefs.getString('user_name')?.trim();
+    if (legacyName != null && legacyName.isNotEmpty && legacyName != 'User') {
+      r.settings['displayName'] = legacyName;
+    }
     data['emergency'] = {
       'allergies': prefs.getString('emergency_allergies') ?? '',
       'contact': prefs.getString('emergency_contact') ?? '',
