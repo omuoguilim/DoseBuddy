@@ -183,7 +183,11 @@ class _DoseBuddyAppState extends State<DoseBuddyApp>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.lock_outline, size: 44, color: ink),
+                        Icon(
+                          locked ? Icons.lock_outline : Icons.medication_outlined,
+                          size: 44,
+                          color: ink,
+                        ),
                         const SizedBox(height: 20),
                         Text(
                           'DoseBuddy',
