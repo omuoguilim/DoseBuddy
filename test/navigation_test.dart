@@ -60,6 +60,7 @@ void main() {
     await tester.tap(find.text('History'));
     await tester.pumpAndSettle();
     expect(find.textContaining('Calendar ·'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Review and export records'), 240);
     expect(find.text('Review and export records'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
