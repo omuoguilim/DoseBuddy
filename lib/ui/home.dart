@@ -368,18 +368,29 @@ class _HomeState extends State<Home> {
         ),
         for (final note in r.data['migrationNotes'] as List)
           Notice(note as String),
-        OutlinedButton.icon(
-          onPressed: () async {
-            final d = await showDatePicker(
-              context: context,
-              initialDate: selected,
-              firstDate: DateTime(2000),
-              lastDate: DateTime.now(),
-            );
-            if (d != null) setState(() => selected = d);
-          },
-          icon: const Icon(Icons.calendar_month),
-          label: Text('Calendar · ${dayKey(selected)}'),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                child: Text(
+                  'Calendar · ${dayKey(selected)}',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+              CalendarDatePicker(
+                initialDate: selected,
+                firstDate: DateTime(2000),
+                lastDate: DateTime.now(),
+                onDateChanged: (date) => setState(() => selected = date),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 20),
         if (rows.isEmpty && prn.isEmpty && symptoms.isEmpty)
