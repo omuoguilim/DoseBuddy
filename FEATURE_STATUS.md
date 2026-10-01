@@ -1,6 +1,6 @@
 # DoseBuddy implementation status
 
-This branch preserves the original purple app. It is an evolving beta, not a completed release. A checked-in feature is not evidence of native-device validation.
+DoseBuddy is in development. The sections below distinguish available features from work that still needs implementation or device testing.
 
 ## Approved UI refresh
 
@@ -9,7 +9,7 @@ This branch preserves the original purple app. It is an evolving beta, not a com
 - Today greeting, due-dose progress, next scheduled dose, direct check-in choices, calendar strip, refill notices and original medication actions.
 - Medications search/filter cards, add/scan entry points, saved draft recovery and final medication review. Drafts remain local sensitive data, with the same encryption limitation as existing storage.
 - Interactive Insights counts/chart with medication filtering and accessible day selectors. Confirmed missed, skipped and not recorded remain separate. Original detailed analytics are retained.
-- Care Circle permission preview and clearer real invitation states. The mockup's connected sharing is not represented as implemented.
+- Care Circle permission preview and clearer real invitation states. Connected sharing is not available yet.
 - Existing dose cards use a purple medication accent; recorded-dose snackbar offers Undo.
 
 ## Implemented in code
@@ -47,4 +47,4 @@ This branch preserves the original purple app. It is an evolving beta, not a com
 
 ## Validation
 
-GitHub checks cover Dart analysis and local model/parser tests. Native simulator checks found a Pods_Runner linker failure and checked-in generated settings with machine-specific paths. Generated settings are removed and clean CocoaPods reintegration is being checked; native compatibility is not yet confirmed. Checks do not test OCR capture/results, push delivery, Firebase rules, PDF visual layout, backend deployment, widgets or physical devices. Do not publish this beta as a finished medication-management release.
+GitHub checks cover Dart analysis and local model/parser tests. Native simulator checks found a Pods_Runner linker failure and checked-in generated settings with machine-specific paths. Generated settings are removed and clean CocoaPods reintegration is being checked; native compatibility is not yet confirmed. Checks do not test OCR capture/results, push delivery, Firebase rules, PDF visual layout, backend deployment, widgets or physical devices. The app is not ready for a medication-management release.

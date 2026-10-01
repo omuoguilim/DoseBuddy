@@ -1,6 +1,6 @@
 # DoseBuddy original: feature and release audit
 
-Source: the uploaded original app, preserved in the first source commit of this private repository. Code review as of September 28, 2026. This is a source audit, not a physical-device test or clinical validation. The purple greeting, Today cards, Insights graphs, calendar, side effects, profile, and onboarding are the baseline to keep.
+Code review of the original app as of September 28, 2026. This historical audit lists the features, gaps and release requirements at that point. It does not include physical-device testing or clinical validation.
 
 ## Existing features to preserve
 

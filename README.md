@@ -36,15 +36,15 @@ This is a development beta. Medication records remain local in Hive without app-
 
 GitHub Actions runs Dart analysis, model/parser tests and an unsigned iOS simulator build. Passing those checks does not verify medication safety, notification delivery, OCR quality or Firebase authorization on real devices.
 
-This public repository now contains the current app source. Previous versions remain in commit history; development also continues in my separate private repository. The portfolio demo runs the Flutter interface with fictional records and separate browser storage.
+This public repository now contains the current app source. Previous versions remain in commit history; development also continues in my separate private repository. The portfolio demo includes sample records to explore.
 
 
-## Try the portfolio demo
+## Try DoseBuddy
 
-[Open the phone-style demo](https://oluchi-muoguilim.superct3663.chatgpt.site/demos/dosebuddy/index.html). No account or Appetize session is needed.
+[Open the demo](https://oluchi-muoguilim.superct3663.chatgpt.site/demos/dosebuddy/index.html).
 
-The browser version uses these Flutter screens with fictional medications and history. You can add/edit medications, record or correct doses, track symptoms and refills, explore the calendar and adherence charts, and download a PDF report. Practice records use a separate browser database and preferences namespace. The portfolio build does not connect to Firebase or create real accounts.
+Explore sample medications, record a dose, compare the charts and download a report. Reset restores the sample records. Demo changes stay in your browser and do not affect a phone account.
 
-Label uploads use Tesseract.js in the browser, with a model download on first use. Native reminder delivery and connected Care Circle are not reproduced as working browser services. Those screens explain their limits. Use the Reset button to restore sample records.
+You can upload a sample label and review the scan before saving. Notifications require the phone app. Care Circle sharing is not available yet.
 
-Build with `flutter build web --release --dart-define=PORTFOLIO_DEMO=true --base-href /demos/dosebuddy/app/`. Ordinary phone builds keep the existing authentication and storage paths.
+For development: `flutter build web --release --dart-define=PORTFOLIO_DEMO=true --base-href /demos/dosebuddy/app/`.
