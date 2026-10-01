@@ -1,50 +1,54 @@
 # DoseBuddy
 
-DoseBuddy is my medication tracking app, built with Flutter. I started it to make medication schedules, dose check-ins and symptom notes easier to keep together. This version builds on my original purple app and keeps its calendar and adherence screens.
+I’m building DoseBuddy to keep medication schedules, dose records and symptom notes in one place. I wanted the app to feel personal, so I kept the purple design, time-of-day greeting, calendar and adherence charts as I added more tracking tools.
 
-## What you can try
+This repository contains my current **Flutter app for iOS and Android**. The [portfolio demo](https://oluchi-muoguilim.superct3663.chatgpt.site/demos/dosebuddy/index.html) is a separate web build of the Flutter interface with sample records. It does not replace the phone app. Demo mode is disabled on phones.
 
-I'm building on the original purple screens, keeping the greeting, calendar and week/month adherence charts.
+## What I’ve added
 
-- Add/edit medication strengths with a unit dropdown. Older free-text entries are preserved.
-- Scan a prescription label with the camera or a photo, then review the OCR suggestions before saving. Scanning does not decide your dosing schedule.
-- Record taken, missed, intentionally skipped or uncertain doses; correct an entry and retain its earlier state. Not recorded is different from missed.
-- Set weekdays, intervals, start/end dates, pauses, archive status and as-needed use. Schedule changes take effect tomorrow so yesterday's records keep their original schedule.
-- Browse/search medications, add packaging photos, call saved pharmacy/prescriber numbers and log a new bottle's pill count.
-- Log searchable symptoms, severity, onset and duration; use a health journal for measurements and appointment questions.
-- Preview/share a PDF with selected medications, due-dose records, optional symptoms and optional patient identity. Sharing does not confirm delivery to a doctor.
-- Manage reminder permissions, privacy, timezone and tests. Reminders cover the next 60 scheduled doses and refresh when the app resumes.
-- Sign in with verified Firebase email/password. Care Circle has email/verified-phone invitation code; connected medication sharing is still unfinished.
+- Medication strengths with a unit dropdown, packaging photos and searchable medication lists.
+- Prescription-label scanning with editable suggestions. I use Apple Vision on iOS, ML Kit on Android and Tesseract.js in the browser demo. A scan fills in a draft; it does not choose a dosing schedule.
+- Taken, missed, intentionally skipped and uncertain dose records, plus corrections that retain the earlier entry. An unrecorded dose stays distinct from a missed dose.
+- Weekday and interval schedules, start/end dates, pauses, archived medications and as-needed use.
+- Calendar views and weekly/monthly adherence charts.
+- Refill logging, saved pharmacy/prescriber phone numbers and medication notes.
+- Searchable symptoms with severity, onset and duration, plus a journal for measurements and appointment questions.
+- PDF report previews with selected medications, dose history, optional symptoms and optional patient details.
+- Reminder permissions, notification privacy, timezone settings and reminder tests.
+- Firebase email/password sign-in and verification.
 
-For a quick test, add a made-up medication, record and correct a dose in **Insights → tools → Dose Review**, then compare the calendar and chart. Try the report preview with the patient name switched off. Camera OCR needs native-device testing; an unreadable label should be edited manually. Recognition uses Apple Vision on iOS, ML Kit on Android and Tesseract.js in the portfolio demo. Each platform still needs scanning tests with representative labels.
+Schedule changes take effect tomorrow so earlier records keep their original schedule. Reminders cover the next 60 scheduled doses and refresh when the app resumes.
+
+## A quick look around
+
+My favorite way to check the app is to add a sample medication, record a dose and correct it in **Insights → tools → Dose Review**. I then compare the calendar and adherence chart, add a symptom, and preview a report with the patient name hidden.
+
+The browser demo keeps changes in browser storage, and Reset restores its sample records. Phone notifications and connected Care Circle sharing are not available in that demo.
 
 ## Run locally
 
-From the project folder, with Flutter and Xcode installed:
+I use Flutter, Xcode for iOS and a configured Firebase project.
 
 ```sh
 flutter pub get
+dart pub global activate flutterfire_cli
 dart pub global run flutterfire_cli:flutterfire configure --project=YOUR_FIREBASE_PROJECT --platforms=ios,android
-flutter run
+flutter devices
+flutter run -d DEVICE_ID
 ```
 
-If your Mac reports a `Flutter.framework` resource-fork code-signing error, try running the project from a folder outside a synced Desktop location. That is a local build issue, not a reason to update this app's dependencies blindly.
+For the isolated portfolio build:
 
-## Before a release
+```sh
+flutter build web --release --dart-define=PORTFOLIO_DEMO=true --base-href /demos/dosebuddy/app/
+```
 
-This is a development beta. Medication records remain local in Hive without app-level encryption; cloud recovery is not implemented. The Care Circle backend needs deployment and security testing, and it does not yet share medication data or deliver caregiver alerts. Widgets, translations, full account deletion, reconciliation, official pharmacy logos and other approved additions remain outstanding. [FEATURE_STATUS.md](FEATURE_STATUS.md) tracks the gaps explicitly.
+## What I’m still working on
 
-GitHub Actions runs Dart analysis, model/parser tests and an unsigned iOS simulator build. Passing those checks does not verify medication safety, notification delivery, OCR quality or Firebase authorization on real devices.
+DoseBuddy is a development beta. I have invitation code for email and verified-phone Care Circle requests, but connected medication sharing and caregiver alerts are unfinished. I still need to deploy and test the backend permissions.
 
-This public repository now contains the current app source. Previous versions remain in commit history; development also continues in my separate private repository. The portfolio demo includes sample records to explore.
+Medication records currently stay in local Hive storage without app-level encryption. Cloud recovery, full account deletion, widgets, translations and other release work are tracked in [FEATURE_STATUS.md](FEATURE_STATUS.md). A shared PDF does not confirm that a doctor received it.
 
+My automated checks cover Dart analysis, selected models/parsers and an unsigned simulator build. I still need real-device checks for reminders, scanning and account authorization. I don’t treat a successful build as proof that the app is ready for medical use.
 
-## Try DoseBuddy
-
-[Open the demo](https://oluchi-muoguilim.superct3663.chatgpt.site/demos/dosebuddy/index.html).
-
-Explore sample medications, record a dose, compare the charts and download a report. Reset restores the sample records. Demo changes stay in your browser and do not affect a phone account.
-
-You can upload a sample label and review the scan before saving. Notifications require the phone app. Care Circle sharing is not available yet.
-
-For development: `flutter build web --release --dart-define=PORTFOLIO_DEMO=true --base-href /demos/dosebuddy/app/`.
+Previous versions remain in the commit history. I also keep a private development repository.
