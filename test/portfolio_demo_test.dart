@@ -60,7 +60,10 @@ void main() {
   await tester.tap(find.text('No'));
   await tester.runAsync(() async {await Future<void>.delayed(const Duration(milliseconds:150));});
   await tester.pump(const Duration(milliseconds:500));
+  await tester.pump(const Duration(milliseconds:500));
   expect(find.byType(SnackBar),findsOneWidget);
+  expect(tester.widget<SnackBar>(find.byType(SnackBar)).persist,isFalse);
+  expect(tester.widget<SnackBar>(find.byType(SnackBar)).showCloseIcon,isTrue);
   await tester.pump(const Duration(seconds:6));
   await tester.pump(const Duration(seconds:1));
   expect(find.byType(SnackBar),findsNothing);
