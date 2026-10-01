@@ -29,7 +29,7 @@ void main() {
   expect(tester.takeException(),isNull);
   await tester.tap(find.text('Care Circle').last);
   await tester.pump(const Duration(seconds:1));
-  expect(find.text('Practice mode: no real accounts or invitations are connected.'),findsNWidgets(2));
+  expect(find.text('Invitation beta'),findsOneWidget);
   expect(tester.takeException(),isNull);
   await tester.pumpWidget(const SizedBox());
   await box.close();
