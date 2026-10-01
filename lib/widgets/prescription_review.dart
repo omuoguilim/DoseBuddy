@@ -35,7 +35,7 @@ class _PrescriptionReviewPageState extends State<PrescriptionReviewPage> {
     Row(children: [TextButton.icon(onPressed: _busy ? null : () => _scan(ImageSource.camera), icon: const Icon(Icons.camera_alt), label: const Text('Camera')), TextButton.icon(onPressed: _busy ? null : () => _scan(ImageSource.gallery), icon: const Icon(Icons.photo_library), label: const Text('Upload'))]),
     if (DemoMode.enabled) ...[
       const Text('Browser OCR downloads a recognition model on first use. Use a fictional label; do not upload personal health information.'),
-      TextButton.icon(onPressed: _busy ? null : () { const text = 'SAMPLE PRESCRIPTION\n10 mg\nTake one tablet as directed.\nFictional demonstration label'; final fields = PrescriptionFields.parse(text); setState(() { _text=text; _name.text=fields.name; _strength.text=fields.strength; _unit=fields.unit; _directions.text=fields.directions; _confirmed=false; }); }, icon: const Icon(Icons.description_outlined), label: const Text('Try sample label text')),
+      TextButton.icon(onPressed: _busy ? null : () { const text = 'SAMPLE PRESCRIPTION 10 mg\nTake one tablet as directed.\nFictional demonstration label'; final fields = PrescriptionFields.parse(text); setState(() { _text=text; _name.text=fields.name; _strength.text=fields.strength; _unit=fields.unit; _directions.text=fields.directions; _confirmed=false; }); }, icon: const Icon(Icons.description_outlined), label: const Text('Try sample label text')),
     ],
     if (_busy) const LinearProgressIndicator(),
     if (_error.isNotEmpty) Text(_error),
