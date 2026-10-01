@@ -35,10 +35,12 @@ jobs:
             rg -n -C 3 "error:|Error \(Xcode\)|ld:|Pods_Runner|Linker command" native-build.log | tail -n 180
             exit 1
           fi
+      - name: Package simulator app with executable permissions
+        run: tar -czf dosebuddy-ios-simulator.tar.gz -C build/ios/iphonesimulator Runner.app
       - uses: actions/upload-artifact@v4
         with:
           name: dosebuddy-ios-simulator
-          path: build/ios/iphonesimulator/Runner.app
+          path: dosebuddy-ios-simulator.tar.gz
   android-demo:
     runs-on: ubuntu-latest
     steps:
