@@ -168,8 +168,12 @@ class _MySquareState extends State<MySquare> with SingleTickerProviderStateMixin
     }
 
     if (mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          persist: false,
+          duration: const Duration(seconds: 5),
+          showCloseIcon: true,
           content: Row(
             children: [
               const Icon(Icons.check_circle, color: Colors.white),
@@ -177,7 +181,7 @@ class _MySquareState extends State<MySquare> with SingleTickerProviderStateMixin
               Expanded(child:Text('${widget.medication.name} recorded taken')),
             ],
           ),
-          action: SnackBarAction(label:'Undo',onPressed:()async{widget.medication.recordDose(normalizedToday,widget.displayTime,'unknown',reason:'Undid taken entry');await widget.medication.save();if(mounted){widget.onStatusChanged?.call();setState((){});}}),
+          action: SnackBarAction(label:'Undo',onPressed:()async{ScaffoldMessenger.of(context).removeCurrentSnackBar();widget.medication.recordDose(normalizedToday,widget.displayTime,'unknown',reason:'Undid taken entry');await widget.medication.save();if(mounted){widget.onStatusChanged?.call();setState((){});}}),
           backgroundColor: const Color(0xFF5B67CA),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

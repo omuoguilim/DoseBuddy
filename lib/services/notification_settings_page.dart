@@ -26,7 +26,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
   }
 
   Future<void> _sendTestNotification() async {
-    if(DemoMode.enabled){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Notifications are a phone feature. No reminder is sent in this demo.')));return;}
+    if(DemoMode.enabled){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Notifications are available on the phone app only.')));return;}
     await NotificationService().showImmediateNotification(
       title: '🧪 Test Notification',
       body: 'This is a test! If you see this, notifications are working.',
@@ -43,7 +43,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
   }
 
   Future<void> _scheduleTestNotification() async {
-    if(DemoMode.enabled){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Notifications are a phone feature. No reminder is sent in this demo.')));return;}
+    if(DemoMode.enabled){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Notifications are available on the phone app only.')));return;}
     await NotificationService().showTestNotification();
     
     if (mounted) {

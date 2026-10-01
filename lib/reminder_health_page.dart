@@ -23,7 +23,7 @@ class _ReminderHealthPageState extends State<ReminderHealthPage> {
   }
   @override
   Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('Reminder health & privacy')),body:ListView(padding:const EdgeInsets.all(20),children:[
-    if(DemoMode.enabled) const Card(child:Padding(padding:EdgeInsets.all(16),child:Text('Phone reminder settings preview. This browser demo does not deliver scheduled notifications.'))),
+    if(DemoMode.enabled) const Card(child:Padding(padding:EdgeInsets.all(16),child:Text('Notifications are available on the phone app only.'))),
     SwitchListTile(title:const Text('Medication reminders'),value:_enabled,onChanged:_busy?null:(v){setState(()=>_enabled=v);_save();}),
     SwitchListTile(title:const Text('Hide medication names on notifications'),subtitle:const Text('Private text is the default.'),value:_private,onChanged:_busy?null:(v){setState(()=>_private=v);_save();}),
     const Text('Reminders follow this home timezone. Changing it does not change previous dose records. Automatic travel detection is not enabled.'),

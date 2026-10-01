@@ -53,8 +53,8 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog<void>(context: context, builder: (c) => AlertDialog(
       title: Text(privacy ? 'Data and privacy information' : 'DoseBuddy help'),
       content: SingleChildScrollView(child: Text(privacy
-        ? 'Medication, symptom, measurement and appointment records are currently stored on this device. Email/password sign-in uses Firebase. Care Circle contact lookup and invitations require a separate backend deployment. Cloud backup of medication records is not implemented. Photos and reports can contain sensitive information. Review a report before sharing it. A published privacy policy, retention policy and complete account deletion are still required before release.'
-        : 'Insights → tools gives you the medication library, dose review, doctor report, health journal and reminder health. A missing dose record is not counted as confirmed missed. Correct accidental entries in Dose Review. Schedule changes start tomorrow. For reminder problems, check permissions and run a reminder test. This beta has no monitored support inbox; do not send private health records in public GitHub issues.')),
+        ? 'Medication, symptom and journal records are stored locally without app-level encryption. Cloud backup and full account deletion are not available yet. Review reports before sharing them; they may include personal information. Care Circle sharing is not available yet.'
+        : 'Insights → tools gives you the medication library, dose review, doctor report, health journal and reminder health. A missing dose record is not counted as confirmed missed. Correct accidental entries in Dose Review. Schedule changes start tomorrow. For reminder problems, check permissions and run a reminder test. For questions, use GitHub issues without including personal health information.')),
       actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('Close'))],
     ));
   }

@@ -470,7 +470,7 @@ class _AuthPageState extends State<AuthPage> {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        _showError('Facebook login not yet implemented');
+                        _showError('Facebook sign-in is not available yet.');
                       },
                       icon: const Icon(Icons.facebook, color: Color(0xFF1877F2)),
                       label: const Text(
@@ -490,7 +490,7 @@ class _AuthPageState extends State<AuthPage> {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        _showError('Google login not yet implemented');
+                        _showError('Google sign-in is not available yet.');
                       },
                       icon: const Icon(Icons.g_mobiledata, color: Color(0xFFDB4437), size: 28),
                       label: const Text(

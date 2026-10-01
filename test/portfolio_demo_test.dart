@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dosebuddy/demo/demo_mode.dart';
 import 'package:dosebuddy/demo/demo_shell.dart';
 import 'package:dosebuddy/models/medication.dart';
+import 'package:dosebuddy/square.dart';
 import 'package:dosebuddy/widgets/dosebuddy_theme.dart';
 
 void main() {
@@ -34,7 +35,7 @@ void main() {
   print('BROWSER STEP: startup');
   await tester.pumpWidget(MaterialApp(theme:DoseBuddyTheme.light,home:const DemoShell()));
   await tester.pump(const Duration(seconds:1));
-  expect(find.text('Practice mode · fictional data'),findsOneWidget);
+  expect(find.text('Demo · sample records'),findsOneWidget);
   expect(errors,isEmpty,reason:errors.join('\n')); 
   print('BROWSER STEP: Insights');
   await tester.tap(find.text('Insights').last);
@@ -43,7 +44,7 @@ void main() {
   print('BROWSER STEP: Care Circle');
   await tester.tap(find.text('Care Circle').last);
   await tester.pump(const Duration(seconds:1));
-  expect(find.text('Invitation beta'),findsOneWidget);
+  expect(find.text('Sharing unavailable'),findsOneWidget);
   expect(errors,isEmpty,reason:errors.join('\n')); 
   for(final tab in ['Medications','Profile']) {
    print('BROWSER STEP: $tab');
@@ -51,6 +52,20 @@ void main() {
    await tester.pump(const Duration(seconds:1));
    expect(errors,isEmpty,reason:errors.join('\n'));
   }
+  print('BROWSER STEP: dose confirmation dismissal');
+  final med=box.values.first;
+  await tester.pumpWidget(MaterialApp(theme:DoseBuddyTheme.light,home:Scaffold(body:MySquare(medication:med,displayTime:med.times.first))));
+  await tester.tap(find.text('Record taken'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('No'));
+  await tester.runAsync(() async {await Future<void>.delayed(const Duration(milliseconds:150));});
+  await tester.pump(const Duration(milliseconds:500));
+  expect(find.byType(SnackBar),findsOneWidget);
+  await tester.pump(const Duration(seconds:6));
+  await tester.pump(const Duration(seconds:1));
+  expect(find.byType(SnackBar),findsNothing);
+  expect(med.wasTakenOn(DateTime.now(),med.times.first),isTrue);
+  expect(errors,isEmpty,reason:errors.join('\n'));
   await tester.pumpWidget(const SizedBox());
   } catch(error,stack){print('BROWSER TEST FAILURE: $error\n$stack');rethrow;}
  },skip:!DemoMode.enabled);

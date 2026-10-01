@@ -26,7 +26,7 @@ class _CareCirclePageState extends State<CareCirclePage> {
   String get _uid => FirebaseAuth.instance.currentUser!.uid;
 
   Future<void> _call(String name, Map<String, dynamic> data) async {
-    if(DemoMode.enabled){_message('Preview only. No invitation is sent; connected Care Circle sharing is still being built.');return;}
+    if(DemoMode.enabled){_message('Invitations are unavailable in this demo.');return;}
     setState(() => _busy = true);
     try {
       await _functions.httpsCallable(name).call(data);
@@ -53,7 +53,7 @@ class _CareCirclePageState extends State<CareCirclePage> {
       _message('Enter your number with country code, for example +14045550123.');
       return;
     }
-    if(DemoMode.enabled){_message('Preview only. No invitation is sent; connected Care Circle sharing is still being built.');return;}
+    if(DemoMode.enabled){_message('Invitations are unavailable in this demo.');return;}
     setState(() => _busy = true);
     try {
       await FirebaseAuth.instance.verifyPhoneNumber(
@@ -100,16 +100,16 @@ class _CareCirclePageState extends State<CareCirclePage> {
   }
 
   void _preview(List<dynamic> permissions) {
-    showDialog<void>(context:context,builder:(c)=>AlertDialog(title:const Text('Permission preview'),content:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('These are the requested permissions. Connected medication sharing is not enabled in this beta.'),const SizedBox(height:12),for(final p in permissions)ListTile(contentPadding:EdgeInsets.zero,leading:const Icon(Icons.check_circle_outline,color:DoseBuddyTheme.purple),title:Text(p=='routine'?'Routine':p=='history'?'Dose history':'Missed-dose alerts')),const Text('Symptom records and photos are not included.')]),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('Close'))]));
+    showDialog<void>(context:context,builder:(c)=>AlertDialog(title:const Text('Permission preview'),content:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('These permissions control what a family member could see. Sharing is not available yet.'),const SizedBox(height:12),for(final p in permissions)ListTile(contentPadding:EdgeInsets.zero,leading:const Icon(Icons.check_circle_outline,color:DoseBuddyTheme.purple),title:Text(p=='routine'?'Routine':p=='history'?'Dose history':'Missed-dose alerts')),const Text('Symptom records and photos are not included.')]),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('Close'))]));
   }
   Widget _invitations({required bool sent}) {
-    if(DemoMode.enabled) return const Padding(padding:EdgeInsets.symmetric(vertical:12),child:Text('Practice mode: no real accounts or invitations are connected.')); 
+    if(DemoMode.enabled) return const Padding(padding:EdgeInsets.symmetric(vertical:12),child:Text('Invitations are unavailable in this demo.')); 
     final query = FirebaseFirestore.instance.collection('careInvitations')
         .where(sent ? 'ownerUid' : 'recipientUid', isEqualTo: _uid);
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: query.snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.hasError) return const Card(child:ListTile(leading:Icon(Icons.cloud_off_outlined),title:Text('Invitations are unavailable'),subtitle:Text('Check your connection. Backend deployment and App Check setup are required for this beta.')));
+        if (snapshot.hasError) return const Card(child:ListTile(leading:Icon(Icons.cloud_off_outlined),title:Text('Invitations are unavailable'),subtitle:Text('Please try again later.')));
         if (!snapshot.hasData) return const LinearProgressIndicator();
         if (snapshot.data!.docs.isEmpty) return const Card(child:ListTile(leading:Icon(Icons.people_outline),title:Text('No invitations yet'),subtitle:Text('Invite a family member, or ask them to invite your verified account.')));
         return Column(children: [
@@ -147,7 +147,7 @@ class _CareCirclePageState extends State<CareCirclePage> {
     body: ListView(padding: const EdgeInsets.all(20), children: [
       const Text('You choose what to share',style:TextStyle(fontSize:20,fontWeight:FontWeight.w700)),
       const SizedBox(height:12),
-      const Card(color:DoseBuddyTheme.tint,child:ListTile(leading:Icon(Icons.info_outline,color:DoseBuddyTheme.purple),title:Text('Invitation beta'),subtitle:Text('Medication sharing and family alerts are not enabled yet.'))),
+      const Card(color:DoseBuddyTheme.tint,child:ListTile(leading:Icon(Icons.info_outline,color:DoseBuddyTheme.purple),title:Text('Sharing unavailable'),subtitle:Text('Medication sharing and family alerts are not enabled yet.'))),
       const Text('Invite someone with an existing verified DoseBuddy account. They must accept first.'),
       const SizedBox(height:16),
       const Text('Invite a family member',style:TextStyle(fontSize:18,fontWeight:FontWeight.w600)),
@@ -182,7 +182,7 @@ class _CareCirclePageState extends State<CareCirclePage> {
         TextButton(onPressed: _confirmPhone, child: const Text('Verify my number')),
       ],
       const SizedBox(height: 16),
-      const Text('Invitations are ready to test. Medication sharing and family alerts will remain off until encrypted cloud sync and access rules are implemented.'),
+      const Text('Medication sharing and family alerts are not available yet.'),
     ]),
   );
 
