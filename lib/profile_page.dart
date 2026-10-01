@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
-import 'mainscreen.dart';
+import 'demo/demo_shell.dart';
 import 'models/medication.dart';
 import 'package:share_plus/share_plus.dart';
 import 'auth_page.dart';
@@ -304,7 +304,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _logout() async {
-    if(DemoMode.enabled){await DemoMode.seed(reset:true);if(mounted)Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder:(_)=>const MainScreen()),(route)=>false);return;}
+    if(DemoMode.enabled){await DemoMode.seed(reset:true);if(mounted)Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder:(_)=>const DemoShell()),(route)=>false);return;}
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
