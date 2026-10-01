@@ -4,7 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'care_circle_page.dart';
 import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:io';
+import 'widgets/platform_photo.dart';
+import 'demo/demo_shell.dart';
 import 'square.dart';
 import 'add_medication_page.dart';
 import 'models/medication.dart';
@@ -103,6 +104,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _logout() async {
+    if(DemoMode.enabled){await DemoMode.seed(reset:true);if(mounted)Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder:(_)=>const DemoShell()),(route)=>false);return;}
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -191,8 +193,8 @@ class _HomePageState extends State<HomePage> {
                         ),
                         child: _profileImagePath != null
                             ? ClipOval(
-                                child: Image.file(
-                                  File(_profileImagePath!),
+                                child: platformPhoto(
+                                  _profileImagePath!,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return const Icon(

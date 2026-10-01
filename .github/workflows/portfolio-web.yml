@@ -2,7 +2,7 @@ name: Portfolio web demo
 on:
   push:
     branches: [main]
-    paths: ['lib/**', 'web/**', 'pubspec*', '.github/workflows/portfolio-web.yml']
+    paths: ['lib/**', 'test/**', 'web/**', 'pubspec*', '.github/workflows/portfolio-web.yml']
   workflow_dispatch:
 permissions:
   contents: read

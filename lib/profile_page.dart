@@ -1,3 +1,4 @@
+import 'services/browser_download.dart';
 import 'widgets/platform_photo.dart';
 import 'demo/demo_mode.dart';
 import 'package:flutter/material.dart';
@@ -260,6 +261,7 @@ class _ProfilePageState extends State<ProfilePage> {
       csvData += '${med.name},${med.dosage},"${med.times.join('; ')}",${med.notes},${med.createdAt}\n';
     }
     
+    if(DemoMode.enabled){downloadText(csvData,'dosebuddy-medications.csv');return;}
     await Share.share(csvData, subject: 'DoseBuddy Medication Export');
   }
 
