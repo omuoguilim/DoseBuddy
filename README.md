@@ -37,3 +37,12 @@ This is a development beta. Medication records remain local in Hive without app-
 GitHub Actions runs Dart analysis, model/parser tests and an unsigned iOS simulator build. Passing those checks does not verify medication safety, notification delivery, OCR quality or Firebase authorization on real devices.
 
 This public repository now contains the current app source. Previous versions remain in commit history; development also continues in my separate private repository. The embedded phone demo is awaiting a current build.
+
+
+## Try the portfolio demo
+
+The browser version uses these Flutter screens with fictional medications and history. You can add/edit medications, record or correct doses, track symptoms and refills, explore the calendar and adherence charts, and download a PDF report. Practice records use a separate browser database and preferences namespace. The portfolio build does not connect to Firebase or create real accounts.
+
+Label uploads use Tesseract.js in the browser, with a model download on first use. Native reminder delivery and connected Care Circle are not reproduced as working browser services. Those screens explain their limits. Use the Reset button to restore sample records.
+
+Build with `flutter build web --release --dart-define=PORTFOLIO_DEMO=true --base-href /demos/dosebuddy/app/`. Ordinary phone builds keep the existing authentication and storage paths.
