@@ -45,6 +45,12 @@ void main() {
   await tester.pump(const Duration(seconds:1));
   expect(find.text('Invitation beta'),findsOneWidget);
   expect(errors,isEmpty,reason:errors.join('\n')); 
+  for(final tab in ['Medications','Profile']) {
+   print('BROWSER STEP: $tab');
+   await tester.tap(find.text(tab).last);
+   await tester.pump(const Duration(seconds:1));
+   expect(errors,isEmpty,reason:errors.join('\n'));
+  }
   await tester.pumpWidget(const SizedBox());
   } catch(error,stack){print('BROWSER TEST FAILURE: $error\n$stack');rethrow;}
  },skip:!DemoMode.enabled);
