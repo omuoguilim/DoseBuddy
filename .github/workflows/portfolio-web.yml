@@ -14,10 +14,11 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          cache: true
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos --no-fatal-warnings
       - run: flutter test
-      - run: flutter test --reporter expanded --platform chrome --dart-define=PORTFOLIO_DEMO=true test/portfolio_demo_test.dart
+      - run: timeout 180s flutter test --reporter expanded --platform chrome --dart-define=PORTFOLIO_DEMO=true test/portfolio_demo_test.dart
       - run: flutter build web --release --dart-define=PORTFOLIO_DEMO=true --base-href /demos/dosebuddy/app/
       - uses: actions/upload-artifact@v4
         with:

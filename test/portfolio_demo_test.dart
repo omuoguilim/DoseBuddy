@@ -21,7 +21,7 @@ void main() {
  testWidgets('Practice startup, charts and Care Circle work without Firebase', (tester) async {
   final originalErrorHandler=FlutterError.onError;
   final errors=<String>[];
-  FlutterError.onError=(details){errors.add(details.toString());print('BROWSER FRAMEWORK ERROR: ${details.toString()}');};
+  FlutterError.onError=(details){errors.add(details.toString());print('BROWSER FRAMEWORK ERROR: ${details.toString()}');originalErrorHandler?.call(details);};
   addTearDown(()=>FlutterError.onError=originalErrorHandler);
   try {
   print('BROWSER STEP: seed ${box.length} medications');
