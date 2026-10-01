@@ -1,3 +1,4 @@
+import 'demo/demo_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -53,7 +54,7 @@ class _CalendarPageState extends State<CalendarPage> {
 
   void _loadMedicationsForMonth() {
     print('📄 Reloading calendar data...');
-    final box = Hive.box<Medication>('medications');
+    final box = Hive.box<Medication>(DemoMode.boxName);
     final medications = box.values.toList();
     
     _medicationsByDay.clear();

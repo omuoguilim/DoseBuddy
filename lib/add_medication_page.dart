@@ -1,3 +1,4 @@
+import 'demo/demo_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'models/medication.dart';
@@ -167,7 +168,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a positive numeric strength.')));
       return;
     }
-    final existing = Hive.box<Medication>('medications').values.any((m) => m.name.trim().toLowerCase() == _nameController.text.trim().toLowerCase());
+    final existing = Hive.box<Medication>(DemoMode.boxName).values.any((m) => m.name.trim().toLowerCase() == _nameController.text.trim().toLowerCase());
     if (existing) {
       final confirmed = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: const Text('Medication already listed'), content: const Text('Check that this is a separate prescription before adding another entry.'), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Go back')), TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Add separate entry'))]));
       if (confirmed != true || !mounted) return;
@@ -184,7 +185,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
       lastRefillDate: totalPills != null ? DateTime.now() : null,
     );
 
-    final box = Hive.box<Medication>('medications');
+    final box = Hive.box<Medication>(DemoMode.boxName);
     await box.put(medication.id, medication);
     _draftFinished=true;_draftTimer?.cancel();
     final prefs=await SharedPreferences.getInstance();await prefs.remove('medication_draft');

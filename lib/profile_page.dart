@@ -1,9 +1,11 @@
+import 'widgets/platform_photo.dart';
+import 'demo/demo_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'mainscreen.dart';
 import 'models/medication.dart';
 import 'package:share_plus/share_plus.dart';
 import 'auth_page.dart';
@@ -142,9 +144,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
       if (image != null) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('profile_image', image.path);
+        final photoPath=await durablePhotoPath(image);
+        await prefs.setString('profile_image', photoPath);
         setState(() {
-          _profileImagePath = image.path;
+          _profileImagePath = photoPath;
         });
         
         if (mounted) {
@@ -160,7 +163,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Map<String, dynamic> _calculateStats() {
-    final box = Hive.box<Medication>('medications');
+    final box = Hive.box<Medication>(DemoMode.boxName);
     final medications = box.values.toList();
     
     int totalMedications = medications.length;
@@ -248,7 +251,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _exportData() async {
-    final box = Hive.box<Medication>('medications');
+    final box = Hive.box<Medication>(DemoMode.boxName);
     final medications = box.values.toList();
     
     String csvData = 'Medication,Dosage,Times,Notes,Created\n';
@@ -284,7 +287,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
     
     if (confirmed == true) {
-      final box = Hive.box<Medication>('medications');
+      final box = Hive.box<Medication>(DemoMode.boxName);
       await NotificationService().cancelAllNotifications();
       await box.clear();
       
@@ -301,6 +304,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _logout() async {
+    if(DemoMode.enabled){await DemoMode.seed(reset:true);if(mounted)Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder:(_)=>const MainScreen()),(route)=>false);return;}
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -315,7 +319,7 @@ class _ProfilePageState extends State<ProfilePage> {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: const Color(0xFF5B67CA)),
-            child: const Text('Log Out'),
+            child: const Text(DemoMode.enabled ? 'Reset practice data' : 'Log Out'),
           ),
         ],
       ),
@@ -381,8 +385,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         child: _profileImagePath != null
                             ? ClipOval(
-                                child: Image.file(
-                                  File(_profileImagePath!),
+                                child: platformPhoto(
+                                  _profileImagePath!,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return const Icon(
@@ -641,7 +645,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ListTile(
                           leading: const Icon(Icons.logout, color: Colors.red),
                           title: const Text(
-                            'Log Out',
+                            DemoMode.enabled ? 'Reset practice data' : 'Log Out',
                             style: TextStyle(color: Colors.red),
                           ),
                           trailing: const Icon(Icons.chevron_right, color: Colors.red),
@@ -741,7 +745,7 @@ class _ProfilePageState extends State<ProfilePage> {
             onPressed: () async {
               final prefs = await SharedPreferences.getInstance();
               await prefs.setInt('grace_period_minutes', selected);
-              for (final med in Hive.box<Medication>('medications').values) { med.gracePeriodMinutes = selected; await med.save(); }
+              for (final med in Hive.box<Medication>(DemoMode.boxName).values) { med.gracePeriodMinutes = selected; await med.save(); }
               if (!mounted || !context.mounted) return;
               setState(() => _gracePeriodMinutes = selected);
               Navigator.pop(context);

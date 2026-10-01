@@ -1,3 +1,4 @@
+import 'demo/demo_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -22,7 +23,7 @@ class _InsightsPageState extends State<InsightsPage> {
   Future<void> _open(Widget page)async{await Navigator.push(context,MaterialPageRoute(builder:(_)=>page));if(mounted)setState((){});}
   Widget _legend(String label,Color color)=>Row(mainAxisSize:MainAxisSize.min,children:[Icon(Icons.circle,size:10,color:color),const SizedBox(width:5),Text(label,style:const TextStyle(fontSize:12))]);
   @override
-  Widget build(BuildContext context)=>ValueListenableBuilder<Box<Medication>>(valueListenable:Hive.box<Medication>('medications').listenable(),builder:(context,box,_){
+  Widget build(BuildContext context)=>ValueListenableBuilder<Box<Medication>>(valueListenable:Hive.box<Medication>(DemoMode.boxName).listenable(),builder:(context,box,_){
     final selectedId=box.values.any((m)=>m.id==_medicationId)?_medicationId:null;
     final days=adherenceDays(box.values,DateTime.now(),_days,medicationId:selectedId);
     final total=days.fold<int>(0,(n,d)=>n+d.total),taken=days.fold<int>(0,(n,d)=>n+d.count('taken'));

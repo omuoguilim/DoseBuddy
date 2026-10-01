@@ -1,3 +1,4 @@
+import 'demo/demo_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/notification_services.dart';
@@ -22,13 +23,14 @@ class _ReminderHealthPageState extends State<ReminderHealthPage> {
   }
   @override
   Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('Reminder health & privacy')),body:ListView(padding:const EdgeInsets.all(20),children:[
+    if(DemoMode.enabled) const Card(child:Padding(padding:EdgeInsets.all(16),child:Text('Phone reminder settings preview. This browser demo does not deliver scheduled notifications.'))),
     SwitchListTile(title:const Text('Medication reminders'),value:_enabled,onChanged:_busy?null:(v){setState(()=>_enabled=v);_save();}),
     SwitchListTile(title:const Text('Hide medication names on notifications'),subtitle:const Text('Private text is the default.'),value:_private,onChanged:_busy?null:(v){setState(()=>_private=v);_save();}),
     const Text('Reminders follow this home timezone. Changing it does not change previous dose records. Automatic travel detection is not enabled.'),
     DropdownButtonFormField<String>(value:_timezone,items:['America/New_York','America/Chicago','America/Denver','America/Los_Angeles','Europe/London','Africa/Lagos','Asia/Kolkata','Asia/Tokyo','Australia/Sydney','UTC'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:_busy?null:(v){setState(()=>_timezone=v!);_save();}),
     ListTile(title:Text('Permission: $_permission'),subtitle:const Text('Device settings may suppress notifications even when scheduling succeeds.')),
-    ElevatedButton(onPressed:()async{final ok=await NotificationService().requestPermissions();if(mounted)setState(()=>_permission=ok==true?'Granted':ok==false?'Denied':'Check device settings');},child:const Text('Request notification permission')),
-    TextButton(onPressed:()async{await NotificationService().showTestNotification();if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('One-time test scheduled for five seconds. Watch for it on your device.')));},child:const Text('Test a reminder')),
+    ElevatedButton(onPressed:DemoMode.enabled?null:()async{final ok=await NotificationService().requestPermissions();if(mounted)setState(()=>_permission=ok==true?'Granted':ok==false?'Denied':'Check device settings');},child:const Text('Request notification permission')),
+    TextButton(onPressed:DemoMode.enabled?null:()async{await NotificationService().showTestNotification();if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('One-time test scheduled for five seconds. Watch for it on your device.')));},child:const Text('Test a reminder')),
     Text('$_count pending reminders. Scheduled through: ${_horizon.isEmpty?'None':_horizon}'),
     const Text('The app schedules the next 60 doses across all medications. Reopen it to extend coverage. Scheduling does not prove delivery or that a reminder was seen.'),
     TextButton(onPressed:_busy?null:_save,child:const Text('Rebuild reminders')),

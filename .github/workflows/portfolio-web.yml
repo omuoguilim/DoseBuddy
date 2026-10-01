@@ -1,0 +1,24 @@
+name: Portfolio web demo
+on:
+  push:
+    branches: [main]
+    paths: ['lib/**', 'web/**', 'pubspec*', '.github/workflows/portfolio-web.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test
+      - run: flutter build web --release --dart-define=PORTFOLIO_DEMO=true --base-href /demos/dosebuddy/app/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dosebuddy-portfolio-web
+          path: build/web

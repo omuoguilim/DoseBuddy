@@ -1,3 +1,4 @@
+import 'demo/demo_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -69,7 +70,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         final owner = prefs.getString('dosebuddy_local_owner_uid');
         final canEnter = user != null && user.emailVerified &&
             (owner == user.uid ||
-              (owner == null && Hive.box<Medication>('medications').isEmpty));
+              (owner == null && Hive.box<Medication>(DemoMode.boxName).isEmpty));
         if (!mounted) return;
         Navigator.pushReplacement(
           context,

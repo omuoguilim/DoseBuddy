@@ -1,3 +1,4 @@
+import 'demo/demo_mode.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -25,6 +26,7 @@ class _CareCirclePageState extends State<CareCirclePage> {
   String get _uid => FirebaseAuth.instance.currentUser!.uid;
 
   Future<void> _call(String name, Map<String, dynamic> data) async {
+    if(DemoMode.enabled){_message('Preview only. No invitation is sent; connected Care Circle sharing is still being built.');return;}
     setState(() => _busy = true);
     try {
       await _functions.httpsCallable(name).call(data);
@@ -45,11 +47,13 @@ class _CareCirclePageState extends State<CareCirclePage> {
       .showSnackBar(SnackBar(content: Text(message)));
 
   Future<void> _verifyPhone() async {
+    if(DemoMode.enabled){_message('Phone verification requires a real account in the mobile app. No text message was sent.');return;}
     final phone = _phone.text.trim();
     if (!RegExp(r'^\+[1-9]\d{7,14}$').hasMatch(phone)) {
       _message('Enter your number with country code, for example +14045550123.');
       return;
     }
+    if(DemoMode.enabled){_message('Preview only. No invitation is sent; connected Care Circle sharing is still being built.');return;}
     setState(() => _busy = true);
     try {
       await FirebaseAuth.instance.verifyPhoneNumber(
@@ -99,6 +103,7 @@ class _CareCirclePageState extends State<CareCirclePage> {
     showDialog<void>(context:context,builder:(c)=>AlertDialog(title:const Text('Permission preview'),content:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('These are the requested permissions. Connected medication sharing is not enabled in this beta.'),const SizedBox(height:12),for(final p in permissions)ListTile(contentPadding:EdgeInsets.zero,leading:const Icon(Icons.check_circle_outline,color:DoseBuddyTheme.purple),title:Text(p=='routine'?'Routine':p=='history'?'Dose history':'Missed-dose alerts')),const Text('Symptom records and photos are not included.')]),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('Close'))]));
   }
   Widget _invitations({required bool sent}) {
+    if(DemoMode.enabled) return const Padding(padding:EdgeInsets.symmetric(vertical:12),child:Text('Practice mode: no real accounts or invitations are connected.')); 
     final query = FirebaseFirestore.instance.collection('careInvitations')
         .where(sent ? 'ownerUid' : 'recipientUid', isEqualTo: _uid);
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(

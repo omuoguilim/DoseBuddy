@@ -1,3 +1,4 @@
+import 'demo/demo_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -137,7 +138,7 @@ class _AuthPageState extends State<AuthPage> {
         if (mounted) _showError('This device has another account\'s local data. Use the original account on this device.');
         return;
       }
-      if (existingOwner == null && Hive.box<Medication>('medications').isNotEmpty) {
+      if (existingOwner == null && Hive.box<Medication>(DemoMode.boxName).isNotEmpty) {
         if (!mounted) return;
         final claim = await showDialog<bool>(context: context,
           barrierDismissible: false,

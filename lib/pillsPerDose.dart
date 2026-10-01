@@ -1,3 +1,4 @@
+import 'demo/demo_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'models/medication.dart';
@@ -168,7 +169,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
       pillsPerDose: pillsPerDose, //Set pills per dose
     );
 
-    final box = Hive.box<Medication>('medications');
+    final box = Hive.box<Medication>(DemoMode.boxName);
     await box.put(medication.id, medication);
 
     await NotificationService().scheduleMedicationNotifications(medication);

@@ -1,3 +1,6 @@
+import 'package:flutter/foundation.dart';
+import 'widgets/platform_photo.dart';
+import 'demo/demo_mode.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -27,6 +30,7 @@ class _MedicationLibraryPageState extends State<MedicationLibraryPage> {
   Future<void> _photo(Medication med)async{
     if(_busy)return;setState(()=>_busy=true);
     try{final image=await ImagePicker().pickImage(source:ImageSource.gallery,maxWidth:1600);if(image==null)return;
+      if(kIsWeb){med.details??={};med.details!['photoPath']=await durablePhotoPath(image);await med.save();_message('Packaging photo saved in this browser');return;}
       final dir=await getApplicationDocumentsDirectory();final folder=Directory('${dir.path}/medication_photos');await folder.create(recursive:true);
       final path='${folder.path}/${med.id}-${DateTime.now().millisecondsSinceEpoch}.jpg';await File(image.path).copy(path);
       med.details??={};final previous=med.details!['photoPath'] as String?;med.details!['photoPath']=path;await med.save();
@@ -46,13 +50,13 @@ class _MedicationLibraryPageState extends State<MedicationLibraryPage> {
   Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('Medications'),actions:[IconButton(tooltip:'Add medication',onPressed:()=>_open(const AddMedicationPage()),icon:const Icon(Icons.add_circle_outline))]),body:Column(children:[
     Padding(padding:const EdgeInsets.fromLTRB(20,8,20,12),child:TextField(decoration:const InputDecoration(hintText:'Search medications or pharmacy',prefixIcon:Icon(Icons.search)),onChanged:(v)=>setState(()=>_query=v.toLowerCase()))),
     SingleChildScrollView(scrollDirection:Axis.horizontal,padding:const EdgeInsets.symmetric(horizontal:20),child:Row(children:['Active','As needed','Archived','Paused','All','Prescription','Over the counter','Supplement'].map((v)=>Padding(padding:const EdgeInsets.only(right:8),child:ChoiceChip(label:Text(v),selected:_filter==v,onSelected:(_)=>setState(()=>_filter=v)))).toList())),
-    Expanded(child:ValueListenableBuilder<Box<Medication>>(valueListenable:Hive.box<Medication>('medications').listenable(),builder:(context,box,_) {
+    Expanded(child:ValueListenableBuilder<Box<Medication>>(valueListenable:Hive.box<Medication>(DemoMode.boxName).listenable(),builder:(context,box,_) {
       final meds=box.values.where((m){final d=m.details??{},s=m.scheduleFor(DateTime.now());final text='${m.name} ${d['pharmacy']??''}'.toLowerCase();if(!text.contains(_query))return false;return _filter=='All'||(_filter=='Active'&&s['archived']!=true&&s['paused']!=true)||(_filter=='Paused'&&s['paused']==true)||(_filter=='Archived'&&s['archived']==true)||(_filter=='As needed'&&s['asNeeded']==true)||d['kind']==_filter;}).toList();
       return ListView(padding:const EdgeInsets.all(20),children:[
         if(meds.isEmpty)Card(child:Padding(padding:const EdgeInsets.all(20),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(box.isEmpty?'Your medications will appear here':'No matching medications',style:Theme.of(context).textTheme.titleMedium),const SizedBox(height:8),Text(box.isEmpty?'Scan a label or enter the details manually.':'Try another search or filter. Upcoming schedule changes start tomorrow.')]))),
         for(final m in meds)Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
           InkWell(borderRadius:BorderRadius.circular(12),onTap:()=>_open(DetailPage(medication:m)),child:Padding(padding:const EdgeInsets.symmetric(vertical:8),child:Row(children:[const MedicationGlyph(),const SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(m.name,style:Theme.of(context).textTheme.titleMedium),Text('Strength: ${m.dosage}',style:Theme.of(context).textTheme.bodyMedium),Text(m.scheduleFor(DateTime.now())['asNeeded']==true?'As needed':m.timesFor(DateTime.now()).join(', '),style:Theme.of(context).textTheme.bodySmall),if(m.pillsRemaining!=null)Text('Pills per dose: ${m.pillsPerDose}',style:Theme.of(context).textTheme.bodySmall)])),const Icon(Icons.chevron_right,color:DoseBuddyTheme.muted)]))),
-          if(m.details?['photoPath']!=null&&File(m.details!['photoPath'] as String).existsSync())...[const SizedBox(height:8),Center(child:Image.file(File(m.details!['photoPath'] as String),height:120,fit:BoxFit.contain)),const Text('Reference photo; not verified pill identification.',style:TextStyle(fontSize:12,color:DoseBuddyTheme.muted))],
+          if(m.details?['photoPath']!=null&&(kIsWeb||File(m.details!['photoPath'] as String).existsSync()))...[const SizedBox(height:8),Center(child:platformPhoto(m.details!['photoPath'] as String,height:120,fit:BoxFit.contain)),const Text('Reference photo; not verified pill identification.',style:TextStyle(fontSize:12,color:DoseBuddyTheme.muted))],
           const Divider(height:24),
           ListTile(contentPadding:EdgeInsets.zero,leading:const Icon(Icons.storefront_outlined,size:22),title:Text((m.details?['pharmacy'] as String? ?? '').isEmpty?'Pharmacy / prescriber contacts':m.details!['pharmacy'] as String),trailing:const Icon(Icons.chevron_right),onTap:()=>_open(MedicationOptionsPage(medication:m))),
           if(m.pillsRemaining!=null)ListTile(contentPadding:EdgeInsets.zero,leading:const Icon(Icons.inventory_2_outlined,size:22),title:Text('Refill record · ${m.pillsRemaining} remaining'),trailing:const Icon(Icons.chevron_right),onTap:()=>_open(DetailPage(medication:m))),

@@ -1,3 +1,4 @@
+import 'demo/demo_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'care_circle_page.dart';
@@ -64,7 +65,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _loadMedications() {
-    final box = Hive.box<Medication>('medications');
+    final box = Hive.box<Medication>(DemoMode.boxName);
     setState(() {
       medications = box.values.toList();
     });
@@ -91,7 +92,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Map<String, dynamic> _calculateStats() {
-    final box = Hive.box<Medication>('medications');
+    final box = Hive.box<Medication>(DemoMode.boxName);
     final medications = box.values.toList();
     
     int totalMedications = medications.length;

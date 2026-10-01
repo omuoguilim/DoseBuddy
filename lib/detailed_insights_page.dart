@@ -1,3 +1,4 @@
+import 'demo/demo_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'models/medication.dart';
@@ -477,7 +478,7 @@ class _DetailedInsightsPageState extends State<DetailedInsightsPage> {
   }
 
   Map<String, dynamic> _calculateDetailedStats() {
-    final box = Hive.box<Medication>('medications');
+    final box = Hive.box<Medication>(DemoMode.boxName);
     final medications = box.values.toList();
     
     final now = DateTime.now();

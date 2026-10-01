@@ -1,3 +1,4 @@
+import 'demo/demo_mode.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -49,7 +50,7 @@ class _TodayPageState extends State<TodayPage> {
     })),
   ]);
   @override
-  Widget build(BuildContext context)=>ValueListenableBuilder<Box<Medication>>(valueListenable:Hive.box<Medication>('medications').listenable(),builder:(context,box,_){
+  Widget build(BuildContext context)=>ValueListenableBuilder<Box<Medication>>(valueListenable:Hive.box<Medication>(DemoMode.boxName).listenable(),builder:(context,box,_){
     final now=DateTime.now(),today=DateTime.now();
     final rows=<Map<String,dynamic>>[],future=<Map<String,dynamic>>[];
     for(final m in box.values){

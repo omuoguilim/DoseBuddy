@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'platform_photo.dart';
+import '../demo/demo_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/prescription_ocr.dart';
@@ -32,9 +33,13 @@ class _PrescriptionReviewPageState extends State<PrescriptionReviewPage> {
   Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Review prescription')), body: ListView(padding: const EdgeInsets.all(20), children: [
     const Text('Text recognition can make mistakes. Compare every field with the label. Set your schedule manually from the confirmed instructions.'),
     Row(children: [TextButton.icon(onPressed: _busy ? null : () => _scan(ImageSource.camera), icon: const Icon(Icons.camera_alt), label: const Text('Camera')), TextButton.icon(onPressed: _busy ? null : () => _scan(ImageSource.gallery), icon: const Icon(Icons.photo_library), label: const Text('Upload'))]),
+    if (DemoMode.enabled) ...[
+      const Text('Browser OCR downloads a recognition model on first use. Use a fictional label; do not upload personal health information.'),
+      TextButton.icon(onPressed: _busy ? null : () { const text = 'SAMPLE PRESCRIPTION\n10 mg\nTake one tablet as directed.\nFictional demonstration label'; final fields = PrescriptionFields.parse(text); setState(() { _text=text; _name.text=fields.name; _strength.text=fields.strength; _unit=fields.unit; _directions.text=fields.directions; _confirmed=false; }); }, icon: const Icon(Icons.description_outlined), label: const Text('Try sample label text')),
+    ],
     if (_busy) const LinearProgressIndicator(),
     if (_error.isNotEmpty) Text(_error),
-    if (_photo != null) Image.file(File(_photo!.path), height: 240, fit: BoxFit.contain),
+    if (_photo != null) platformPhoto(_photo!.path, height: 240, fit: BoxFit.contain),
     TextField(controller: _name, decoration: const InputDecoration(labelText: 'Medication name (confirm)')),
     StrengthField(controller: _strength, unit: _unit, onUnitChanged: (v) => setState(() => _unit = v)),
     TextField(controller: _directions, maxLines: 4, decoration: const InputDecoration(labelText: 'Label directions (confirm)')),

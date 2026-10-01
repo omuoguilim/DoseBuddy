@@ -1,3 +1,4 @@
+import 'demo/demo_mode.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
@@ -35,7 +36,7 @@ class _HealthJournalPageState extends State<HealthJournalPage> {
   @override
   Widget build(BuildContext context){
     final symptoms=<Map<String,dynamic>>[],barriers=<String,int>{};
-    for(final m in Hive.box<Medication>('medications').values){for(final s in m.sideEffects??<Map<String,dynamic>>[]){symptoms.add({...s,'medication':m.name});}for(final l in m.takenLog??<Map<String,dynamic>>[]){if(['missed','skipped'].contains(l['state'])){final reason=(l['reason'] as String? ?? '').trim();final label=reason.isEmpty?'No reason recorded':reason;barriers[label]=(barriers[label]??0)+1;}}}
+    for(final m in Hive.box<Medication>(DemoMode.boxName).values){for(final s in m.sideEffects??<Map<String,dynamic>>[]){symptoms.add({...s,'medication':m.name});}for(final l in m.takenLog??<Map<String,dynamic>>[]){if(['missed','skipped'].contains(l['state'])){final reason=(l['reason'] as String? ?? '').trim();final label=reason.isEmpty?'No reason recorded':reason;barriers[label]=(barriers[label]??0)+1;}}}
     symptoms.sort((a,b)=>(b['timestamp'] as String? ?? '').compareTo(a['timestamp'] as String? ?? ''));
     return Scaffold(appBar:AppBar(title:const Text('Health journal')),body:ListView(padding:const EdgeInsets.all(20),children:[
       const Text('Your entries are personal records. DoseBuddy does not interpret measurements or diagnose symptoms.'),

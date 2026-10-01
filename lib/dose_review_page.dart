@@ -1,3 +1,4 @@
+import 'demo/demo_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/medication.dart';
@@ -44,7 +45,7 @@ class _DoseReviewPageState extends State<DoseReviewPage> {
   }
   @override
   Widget build(BuildContext context) {
-    final box = Hive.box<Medication>('medications');
+    final box = Hive.box<Medication>(DemoMode.boxName);
     return Scaffold(appBar: AppBar(title: const Text('Dose review'), actions: [TextButton(onPressed: () => setState(() => _history = !_history), child: Text(_history ? 'Unresolved' : 'History'))]),
       body: ValueListenableBuilder(valueListenable: box.listenable(), builder: (context, box, _) {
         final rows = <Widget>[];

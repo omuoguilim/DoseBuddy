@@ -1,3 +1,4 @@
+import 'demo/demo_mode.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
@@ -18,7 +19,7 @@ class _ReportPageState extends State<ReportPage> {
   bool _symptoms = true, _identity = true;
   DateTimeRange _range = DateTimeRange(start: DateTime.now().subtract(const Duration(days: 30)), end: DateTime.now());
   @override
-  void initState() { super.initState(); _selected.addAll(Hive.box<Medication>('medications').values.map((m) => m.id)); _load(); }
+  void initState() { super.initState(); _selected.addAll(Hive.box<Medication>(DemoMode.boxName).values.map((m) => m.id)); _load(); }
   Future<void> _load() async { final p = await SharedPreferences.getInstance(); if (mounted) setState(() { _notes.text = p.getString('appointment_notes') ?? ''; _name.text = '${p.getString('user_first_name') ?? p.getString('user_name') ?? ''} ${p.getString('user_last_name') ?? ''}'.trim(); }); }
   bool _included(String? stamp) { final d = DateTime.tryParse(stamp ?? ''); return d != null && !d.isBefore(DateTime(_range.start.year, _range.start.month, _range.start.day)) && d.isBefore(DateTime(_range.end.year, _range.end.month, _range.end.day + 1)); }
   List<List<String>> _rows(Medication med) {
@@ -44,7 +45,7 @@ class _ReportPageState extends State<ReportPage> {
   }
   Future<Uint8List> _pdf() async {
     final doc = pw.Document();
-    final medications = Hive.box<Medication>('medications').values.where((m) => _selected.contains(m.id)).toList();
+    final medications = Hive.box<Medication>(DemoMode.boxName).values.where((m) => _selected.contains(m.id)).toList();
     doc.addPage(pw.MultiPage(maxPages: 100, pageFormat: PdfPageFormat.a4, margin: const pw.EdgeInsets.all(36), footer: (c) => pw.Text('DoseBuddy · Patient-reported records · Page ${c.pageNumber}/${c.pagesCount}', style: const pw.TextStyle(fontSize: 9)), build: (_) => [
       pw.Header(level: 0, text: 'Medication and symptom report'),
       if (_identity) pw.Text('Patient: ${_name.text.trim()}'),
@@ -73,7 +74,7 @@ class _ReportPageState extends State<ReportPage> {
     SwitchListTile(title: const Text('Include patient name'), value: _identity, onChanged: (v) => setState(() => _identity = v)),
     ListTile(title: const Text('Report dates'), subtitle: Text('${_range.start.toIso8601String().substring(0, 10)} – ${_range.end.toIso8601String().substring(0, 10)}'), onTap: () async { final r = await showDateRangePicker(context: context, firstDate: DateTime(2000), lastDate: DateTime.now(), initialDateRange: _range); if (r != null) setState(() => _range = r); }),
     const Text('Choose which medications to include'),
-    for (final m in Hive.box<Medication>('medications').values) CheckboxListTile(title: Text(m.name), value: _selected.contains(m.id), onChanged: (v) => setState(() { if (v == true) { _selected.add(m.id); } else { _selected.remove(m.id); } })),
+    for (final m in Hive.box<Medication>(DemoMode.boxName).values) CheckboxListTile(title: Text(m.name), value: _selected.contains(m.id), onChanged: (v) => setState(() { if (v == true) { _selected.add(m.id); } else { _selected.remove(m.id); } })),
     SwitchListTile(title: const Text('Include symptom records'), value: _symptoms, onChanged: (v) => setState(() => _symptoms = v)),
     TextField(controller: _notes, maxLines: 4, decoration: const InputDecoration(labelText: 'Questions and notes to include')),
     const SizedBox(height: 16),

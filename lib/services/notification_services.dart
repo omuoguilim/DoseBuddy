@@ -1,3 +1,4 @@
+import '../demo/demo_mode.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tzdata;
@@ -13,7 +14,7 @@ class NotificationService {
   bool _initialized = false;
   Future<void> Function()? onReviewRequested;
   Future<void> initialize() async {
-    if (_initialized) return;
+    if (_initialized || DemoMode.enabled) return;
     tzdata.initializeTimeZones();
     final p = await SharedPreferences.getInstance();
     // Explicitly selectable home timezone until device timezone support is wired.
@@ -26,12 +27,14 @@ class NotificationService {
     _initialized = true;
   }
   Future<bool?> requestPermissions() async {
+    if (DemoMode.enabled) return false;
     final ios = _notifications.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
     if (ios != null) return ios.requestPermissions(alert: true, badge: true, sound: true);
     return _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission();
   }
   Future<void> scheduleMedicationNotifications(Medication medication) => rescheduleAll();
   Future<void> rescheduleAll() async {
+    if (DemoMode.enabled) return;
     await initialize();
     final prefs = await SharedPreferences.getInstance();
     await _notifications.cancelAll();
@@ -40,7 +43,7 @@ class NotificationService {
     tz.setLocalLocation(tz.getLocation(prefs.getString('reminder_timezone') ?? 'America/New_York'));
     final now = tz.TZDateTime.now(tz.local);
     final requests = <Map<String, dynamic>>[];
-    for (final med in Hive.box<Medication>('medications').values) {
+    for (final med in Hive.box<Medication>(DemoMode.boxName).values) {
       for (int day = 0; day < 60; day++) {
         final date = DateTime(now.year, now.month, now.day + day);
         if (!med.isScheduledFor(date)) continue;
@@ -62,6 +65,7 @@ class NotificationService {
     await prefs.setString('reminder_horizon',next.isEmpty?'':(next.last['at'] as tz.TZDateTime).toIso8601String());
   }
   Future<void> _scheduleNotification({required int id,required String title,required String body,required tz.TZDateTime scheduledTime,String? payload}) async {
+    if (DemoMode.enabled) return;
     const details = NotificationDetails(android:AndroidNotificationDetails('medication_reminders','Medication Reminders',channelDescription:'Scheduled dose reminders',importance:Importance.high,priority:Priority.high,icon:'@mipmap/ic_launcher'),iOS:DarwinNotificationDetails(presentAlert:true,presentBadge:true,presentSound:true));
     await _notifications.zonedSchedule(id,title,body,scheduledTime,details,androidScheduleMode:AndroidScheduleMode.inexactAllowWhileIdle,uiLocalNotificationDateInterpretation:UILocalNotificationDateInterpretation.absoluteTime,payload:payload);
   }
@@ -72,15 +76,17 @@ class NotificationService {
     await _scheduleNotification(id:100000,title:'DoseBuddy reminder',body:'Open DoseBuddy to review your dose.',scheduledTime:tz.TZDateTime.now(tz.local).add(Duration(minutes:minutes)),payload:'${med.id}|$time');
   }
   Future<void> cancelMedicationNotifications(Medication med) async {
+    if (DemoMode.enabled) return;
     final pending = await _notifications.pendingNotificationRequests();
     for(final r in pending){if(r.payload?.startsWith('${med.id}|')==true)await _notifications.cancel(r.id);}
   }
-  Future<void> cancelAllNotifications()=>_notifications.cancelAll();
+  Future<void> cancelAllNotifications() async { if (!DemoMode.enabled) await _notifications.cancelAll(); }
   Future<void> showImmediateNotification({required String title,required String body}) async {
+    if (DemoMode.enabled) return;
     const d=NotificationDetails(android:AndroidNotificationDetails('medication_reminders','Medication Reminders',importance:Importance.high),iOS:DarwinNotificationDetails(presentAlert:true,presentSound:true));
     await _notifications.show(99999,title,body,d);
   }
   Future<void> showTestNotification() async => _scheduleNotification(id:99999,title:'DoseBuddy test reminder',body:'This is a one-time reminder test.',scheduledTime:tz.TZDateTime.now(tz.local).add(const Duration(seconds:5)));
-  Future<List<PendingNotificationRequest>> getPendingNotifications()=>_notifications.pendingNotificationRequests();
+  Future<List<PendingNotificationRequest>> getPendingNotifications() async => DemoMode.enabled ? [] : await _notifications.pendingNotificationRequests();
   Future<int> getPendingNotificationsCount()async=>(await getPendingNotifications()).length;
 }
