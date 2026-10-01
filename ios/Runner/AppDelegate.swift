@@ -4,16 +4,27 @@ import Vision
 import ImageIO
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private var ocrChannel: FlutterMethodChannel?
 
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GeneratedPluginRegistrant.register(with: self)
     if let controller = window?.rootViewController as? FlutterViewController {
-      ocrChannel = FlutterMethodChannel(name: "dosebuddy/prescription_ocr", binaryMessenger: controller.binaryMessenger)
+      GeneratedPluginRegistrant.register(with: self)
+      registerOcr(messenger: controller.binaryMessenger)
+    }
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
+    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    registerOcr(messenger: engineBridge.applicationRegistrar.messenger())
+  }
+
+  private func registerOcr(messenger: FlutterBinaryMessenger) {
+      ocrChannel = FlutterMethodChannel(name: "dosebuddy/prescription_ocr", binaryMessenger: messenger)
       ocrChannel?.setMethodCallHandler { call, result in
         guard call.method == "recognize" else { result(FlutterMethodNotImplemented); return }
         guard let args = call.arguments as? [String: Any], let path = args["path"] as? String else {
@@ -44,7 +55,5 @@ import ImageIO
           }
         }
       }
-    }
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }
