@@ -1,0 +1,37 @@
+name: Flutter checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      # The original app has existing lint warnings; fail on errors while those are resolved.
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test
+  ios-simulator:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - name: Rebuild CocoaPods integration from a clean checkout
+        run: |
+          cd ios
+          pod deintegrate
+      - name: Build iOS simulator
+        run: |
+          if flutter build ios --simulator --debug --no-codesign --verbose > native-build.log 2>&1; then
+            tail -n 20 native-build.log
+          else
+            rg -n -C 3 "error:|Error \(Xcode\)|ld:|Pods_Runner|Linker command" native-build.log | tail -n 180
+            exit 1
+          fi

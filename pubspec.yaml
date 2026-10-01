@@ -1,11 +1,10 @@
 name: dosebuddy
 description: A medication tracking and reminder app (iOS)
 publish_to: 'none'
-version: 1.1.0+2
+version: 1.0.0+1
 
 environment:
-  sdk: '>=3.12.0 <4.0.0'
-  flutter: '>=3.44.0'
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
@@ -15,29 +14,31 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   shared_preferences: ^2.2.2
+  firebase_core: ^4.15.0
+  firebase_app_check: ^0.4.8
+  firebase_auth: ^6.7.0
+  cloud_firestore: ^6.10.0
+  cloud_functions: ^6.5.0
   
   # UI & Design
-  flutter_svg: ^2.0.9           # Pill bottle assets
+  flutter_svg: ^2.0.9           # For pill bottle logos ✅
   table_calendar: ^3.0.9        # Calendar widget
   intl: ^0.18.1                 # Date formatting
-  fl_chart: ^0.66.0             # Legacy chart dependency
+  fl_chart: ^0.66.0             # Charts and graphs ✅ FIXES insights_page.dart
   
-  # Notifications (permissions requested explicitly)
+  # Notifications (iOS handles permissions automatically)
   flutter_local_notifications: ^16.3.0
   timezone: ^0.9.2
   
   # Media & Sharing
-  image_picker: ^1.0.7          # Camera/gallery
-  google_mlkit_text_recognition: ^0.16.0  # On-device prescription label OCR
+  google_mlkit_text_recognition: ^0.17.1
+  pdf: ^3.11.3
+  printing: ^5.14.2
+  path_provider: ^2.1.5
+  url_launcher: ^6.3.2
+  image_picker: ^1.0.7          # Camera/gallery ✅ FIXES profile_page.dart (ImageSource)
   share_plus: ^7.2.1            # Share medication data
   
-  flutter_secure_storage: ^9.2.4
-  local_auth: ^2.3.0
-  flutter_timezone: 4.1.1
-  uuid: ^4.5.1
-  url_launcher: ^6.3.1
-  path_provider: ^2.1.5
-
   # Icons
   cupertino_icons: ^1.0.2       # iOS-style icons
 
@@ -49,6 +50,8 @@ dev_dependencies:
   build_runner: ^2.4.7
 
 flutter:
+  config:
+    enable-swift-package-manager: false
   uses-material-design: true
   
   # Assets - Pill bottle logos

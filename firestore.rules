@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Contact lookup and all writes are performed by authenticated callables.
+    // No client may query the private contact directory.
+    match /careInvitations/{invitationId} {
+      allow get, list: if request.auth != null &&
+        (resource.data.ownerUid == request.auth.uid ||
+         resource.data.recipientUid == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

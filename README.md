@@ -1,74 +1,39 @@
-<p align="center"><img src="assets/images/pill_bottle_logo.svg" alt="DoseBuddy logo" width="144"></p>
-
 # DoseBuddy
 
-My first solo app: a medication tracker built with Flutter.
+DoseBuddy is my medication tracking app, built with Flutter. I started it to make medication schedules, dose check-ins and symptom notes easier to keep together. This version builds on my original purple app and keeps its calendar and adherence screens.
 
-DoseBuddy brings medication schedules, dose history and symptom notes into one place. Recording or correcting a dose updates the connected history, supply estimate and exports too.
+## What you can try
 
-## What you can do
+I'm building on the original purple screens, keeping the greeting, calendar and week/month adherence charts.
 
-- **Plan your schedule:** add medications, daily reminder times, amounts and course dates, or keep as-needed records.
-- **Track doses:** record outcomes and correct a record if you made a mistake.
-- **Look back:** browse calendar history and add, edit or delete symptom notes.
-- **See your routine:** the Today screen has a named greeting, daily progress, your next dose and morning, afternoon and evening groups. Insights shows 7- and 30-day charts, time-of-day and medication breakdowns, and an explained score when dose times are available.
-- **Manage changes:** edit medications, pause or resume a course, and update your remaining supply.
-- **Keep useful context:** add a profile photo, save local Care Circle contacts, review the combined health timeline and share a 30-day doctor report.
-- **Set reminders:** choose private previews, an optional follow-up reminder and low-supply notices. Follow-ups are scheduled notifications, not confirmation that a dose was taken.
-- **Scan a label:** start with on-device text recognition, then review the draft and enter the medication details yourself.
-- **Export your records:** take your history with you and keep emergency information in the app.
-- **Control privacy:** use encrypted local records, optional device authentication and private reminder text.
+- Add/edit medication strengths with a unit dropdown. Older free-text entries are preserved.
+- Scan a prescription label with the camera or a photo, then review the OCR suggestions before saving. Scanning does not decide your dosing schedule.
+- Record taken, missed, intentionally skipped or uncertain doses; correct an entry and retain its earlier state. Not recorded is different from missed.
+- Set weekdays, intervals, start/end dates, pauses, archive status and as-needed use. Schedule changes take effect tomorrow so yesterday's records keep their original schedule.
+- Browse/search medications, add packaging photos, call saved pharmacy/prescriber numbers and log a new bottle's pill count.
+- Log searchable symptoms, severity, onset and duration; use a health journal for measurements and appointment questions.
+- Preview/share a PDF with selected medications, due-dose records, optional symptoms and optional patient identity. Sharing does not confirm delivery to a doctor.
+- Manage reminder permissions, privacy, timezone and tests. Reminders cover the next 60 scheduled doses and refresh when the app resumes.
+- Sign in with verified Firebase email/password. Care Circle has email/verified-phone invitation code; connected medication sharing is still unfinished.
 
-## A few things to try
+For a quick test, add a made-up medication, record and correct a dose in **Insights → tools → Dose Review**, then compare the calendar and chart. Try the report preview with the patient name switched off. Camera OCR needs native-device testing; an unreadable label should be edited manually. The current ML Kit integration does not support Apple Silicon iOS 26 simulators; use a physical iPhone while simulator support is being fixed.
 
-Use made-up medication details for a demo.
+## Run locally
 
-1. **Follow one dose through the app.** Add a test medication, record a dose, then find it in the calendar. Correct the record and check the history again.
-2. **Change your plans.** Pause a test medication and see how its upcoming schedule changes, then resume it.
-3. **Leave a note for later.** Add a sample symptom, then edit or delete it from the history.
-4. **Try the scanner on a sample label.** It gives you text to review rather than guessing a dose for you. Camera access depends on the device.
-5. **Check an export.** Export your test records and compare them with what you entered.
-6. **Explore the older features.** Add a name in Settings, look at the Today groups and Insights charts, add a Care Circle contact, then preview the doctor report. Contacts stay on this device; the report shares only when you tap Share.
-
-## A part of the build worth looking at
-
-The rebuild uses one shared record store across the app. A corrected dose or a changed schedule affects more than one screen, so the history, reminders and counts need to agree about what happened.
-
-The record rebuild is documented in [pull request #1](https://github.com/omuoguilim/DoseBuddy/pull/1). The familiar screens and local feature restoration are in [pull request #2](https://github.com/omuoguilim/DoseBuddy/pull/2).
-
-## Built with
-
-Flutter, Dart, Hive, local notifications, device authentication and Google ML Kit text recognition.
-
-## Run
-
-Use Flutter 3.47.2 and its bundled Dart SDK.
+From the project folder, with Flutter and Xcode installed:
 
 ```sh
-git clone https://github.com/omuoguilim/DoseBuddy.git
-cd DoseBuddy
 flutter pub get
-flutter analyze --no-fatal-infos
-flutter test
+dart pub global run flutterfire_cli:flutterfire configure --project=YOUR_FIREBASE_PROJECT --platforms=ios,android
 flutter run
 ```
 
-On a Mac with Xcode, build the embedded-demo binary with:
+If your Mac reports a `Flutter.framework` resource-fork code-signing error, try running the project from a folder outside a synced Desktop location. That is a local build issue, not a reason to update this app's dependencies blindly.
 
-```sh
-flutter build ios --simulator --debug
-```
+## Before a release
 
-The GitHub workflow also builds a simulator artifact for Appetize. Source changes alone do not update the existing website emulator.
+This is a development beta. Medication records remain local in Hive without app-level encryption; cloud recovery is not implemented. The Care Circle backend needs deployment and security testing, and it does not yet share medication data or deliver caregiver alerts. Widgets, translations, full account deletion, reconciliation, official pharmacy logos and other approved additions remain outstanding. [FEATURE_STATUS.md](FEATURE_STATUS.md) tracks the gaps explicitly.
 
-## Product boundaries
+GitHub Actions runs Dart analysis, model/parser tests and an unsigned iOS simulator build. Passing those checks does not verify medication safety, notification delivery, OCR quality or Firebase authorization on real devices.
 
-Records are encrypted on the device. Optional device authentication protects access inside the app. Care Circle is a local contact list: entering a number does not verify an account, send an invite or share records. There is no cloud account, caregiver sharing, interaction checker or dose recommendation service. The old sign-in and sharing controls did not provide those services either, so they were not restored as working features.
-
-Daily clock-time schedules and as-needed records are supported. Reminders queue at most 60 future doses over 30 days and must be refreshed by opening the app. Operating-system delivery is not guaranteed. Scanned text is an unverified draft and requires manual checking.
-
-Supply is an estimate. Updating the remaining quantity establishes a fresh baseline; correcting records from before that count does not change the new count. Manually reconcile supply again when necessary.
-
-## Release review
-
-Read [RELEASE_REVIEW.md](RELEASE_REVIEW.md) before distributing an upgrade. It documents migration limitations, physical-device checks, signing and store requirements. Merging the rebuild does not establish clinical validation or app-store approval. Physical-device validation and production signing remain release requirements.
+This public repository now contains the current app source. Previous versions remain in commit history; development also continues in my separate private repository. The embedded phone demo is awaiting a current build.
