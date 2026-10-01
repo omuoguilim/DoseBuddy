@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import '../services/prescription_ocr.dart';
 import '../services/prescription_parser.dart';
 import 'strength_field.dart';
 
@@ -18,16 +18,15 @@ class _PrescriptionReviewPageState extends State<PrescriptionReviewPage> {
   Future<void> _scan(ImageSource source) async {
     if (_busy) return;
     setState(() { _busy = true; _error = ''; _confirmed = false; });
-    final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
     try {
       final photo = await ImagePicker().pickImage(source: source, maxWidth: 2400);
       if (photo == null) return;
-      final result = await recognizer.processImage(InputImage.fromFilePath(photo.path));
-      final fields = PrescriptionFields.parse(result.text);
+      final text = await PrescriptionOcr.recognize(photo.path);
+      final fields = PrescriptionFields.parse(text);
       if (!mounted) return;
-      setState(() { _photo = photo; _text = result.text; _name.text = fields.name; _strength.text = fields.strength; _unit = fields.unit; _directions.text = fields.directions; });
+      setState(() { _photo = photo; _text = text; _name.text = fields.name; _strength.text = fields.strength; _unit = fields.unit; _directions.text = fields.directions; });
     } catch (_) { if (mounted) setState(() => _error = 'Could not read this image. Try a clearer photo or enter the label manually.'); }
-    finally { await recognizer.close(); if (mounted) setState(() => _busy = false); }
+    finally { if (mounted) setState(() => _busy = false); }
   }
   @override
   Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Review prescription')), body: ListView(padding: const EdgeInsets.all(20), children: [
