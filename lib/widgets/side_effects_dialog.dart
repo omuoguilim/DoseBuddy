@@ -118,7 +118,9 @@ class _SideEffectsDialogState extends State<SideEffectsDialog> {
               ),
               const SizedBox(height: 12),
               TextField(decoration: const InputDecoration(labelText: 'Search symptoms'), onChanged: (v) => setState(() => _query = v.toLowerCase())),
-              DropdownButtonFormField<String>(value: _severity, decoration: const InputDecoration(labelText: 'Severity'), items: ['Mild', 'Moderate', 'Severe'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(), onChanged: (v) => setState(() => _severity = v!)),
+              const SizedBox(height: 20),
+              DropdownButtonFormField<String>(isExpanded: true, value: _severity, decoration: const InputDecoration(labelText: 'Severity'), items: ['Mild', 'Moderate', 'Severe'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(), onChanged: (v) => setState(() => _severity = v!)),
+              const SizedBox(height: 12),
               TextButton(onPressed: () async {
                 final now = DateTime.now();
                 final d = await showDatePicker(context: context, initialDate: _onset ?? now, firstDate: DateTime(2000), lastDate: now);

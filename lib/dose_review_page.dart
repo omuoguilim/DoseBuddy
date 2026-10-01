@@ -39,7 +39,7 @@ class _DoseReviewPageState extends State<DoseReviewPage> {
     if (result == true) {
       if (actual.isAfter(DateTime.now()) && state == 'taken') {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Actual taken time cannot be in the future.')));
-      } else { med.recordDose(date, time, state, reason: reason.text.trim(), actualTime: actual); await med.save(); try { await NotificationService().rescheduleAll(); } catch (_) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Record saved. Reminder refresh failed; check reminder health.'))); } }
+      } else { med.recordDose(date, time, state, reason: reason.text.trim(), actualTime: actual); await med.save(); if(mounted){ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('${med.name}: $state recorded'),duration:const Duration(seconds:3)));setState(()=>_history=true);} try { await NotificationService().rescheduleAll(); } catch (_) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Record saved. Reminder refresh failed; check reminder health.'))); } }
     }
     reason.dispose();
   }

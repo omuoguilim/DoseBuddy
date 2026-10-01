@@ -6,6 +6,8 @@ import 'package:dosebuddy/demo/demo_mode.dart';
 import 'package:dosebuddy/demo/demo_shell.dart';
 import 'package:dosebuddy/models/medication.dart';
 import 'package:dosebuddy/square.dart';
+import 'package:dosebuddy/widgets/side_effects_dialog.dart';
+import 'package:dosebuddy/today_page.dart';
 import 'package:dosebuddy/widgets/dosebuddy_theme.dart';
 
 void main() {
@@ -68,6 +70,20 @@ void main() {
   await tester.pump(const Duration(seconds:1));
   expect(find.byType(SnackBar),findsNothing);
   expect(med.wasTakenOn(DateTime.now(),med.times.first),isTrue);
+  expect(errors,isEmpty,reason:errors.join('\n'));
+  print('BROWSER STEP: saved dose appears on Today');
+  await tester.pumpWidget(MaterialApp(theme:DoseBuddyTheme.light,home:const TodayPage()));
+  await tester.pump(const Duration(seconds:1));
+  expect(find.textContaining('scheduled doses recorded taken'),findsOneWidget);
+  final progress=tester.widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator));
+  expect(progress.value,greaterThan(0));
+  print('BROWSER STEP: symptom field spacing');
+  await tester.pumpWidget(MaterialApp(theme:DoseBuddyTheme.light,home:Scaffold(body:Builder(builder:(context)=>TextButton(onPressed:()=>showDialog(context:context,builder:(_)=>SideEffectsDialog(medication:med,takenDate:DateTime.now(),takenTime:med.times.first)),child:const Text('Open symptoms'))))));
+  await tester.tap(find.text('Open symptoms'));
+  await tester.pumpAndSettle();
+  final search=find.widgetWithText(TextField,'Search symptoms');
+  final severity=find.byType(DropdownButtonFormField<String>);
+  expect(tester.getRect(severity).top-tester.getRect(search).bottom,greaterThanOrEqualTo(20));
   expect(errors,isEmpty,reason:errors.join('\n'));
   await tester.pumpWidget(const SizedBox());
   } catch(error,stack){print('BROWSER TEST FAILURE: $error\n$stack');rethrow;}
