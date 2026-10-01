@@ -16,7 +16,7 @@ I'm building on the original purple screens, keeping the greeting, calendar and 
 - Manage reminder permissions, privacy, timezone and tests. Reminders cover the next 60 scheduled doses and refresh when the app resumes.
 - Sign in with verified Firebase email/password. Care Circle has email/verified-phone invitation code; connected medication sharing is still unfinished.
 
-For a quick test, add a made-up medication, record and correct a dose in **Insights → tools → Dose Review**, then compare the calendar and chart. Try the report preview with the patient name switched off. Camera OCR needs native-device testing; an unreadable label should be edited manually. The current ML Kit integration does not support Apple Silicon iOS 26 simulators; use a physical iPhone while simulator support is being fixed.
+For a quick test, add a made-up medication, record and correct a dose in **Insights → tools → Dose Review**, then compare the calendar and chart. Try the report preview with the patient name switched off. Camera OCR needs native-device testing; an unreadable label should be edited manually. Recognition uses Apple Vision on iOS, ML Kit on Android and Tesseract.js in the portfolio demo. Each platform still needs scanning tests with representative labels.
 
 ## Run locally
 
@@ -36,10 +36,12 @@ This is a development beta. Medication records remain local in Hive without app-
 
 GitHub Actions runs Dart analysis, model/parser tests and an unsigned iOS simulator build. Passing those checks does not verify medication safety, notification delivery, OCR quality or Firebase authorization on real devices.
 
-This public repository now contains the current app source. Previous versions remain in commit history; development also continues in my separate private repository. The embedded phone demo is awaiting a current build.
+This public repository now contains the current app source. Previous versions remain in commit history; development also continues in my separate private repository. The portfolio demo runs the Flutter interface with fictional records and separate browser storage.
 
 
 ## Try the portfolio demo
+
+[Open the phone-style demo](https://oluchi-muoguilim.superct3663.chatgpt.site/demos/dosebuddy/index.html). No account or Appetize session is needed.
 
 The browser version uses these Flutter screens with fictional medications and history. You can add/edit medications, record or correct doses, track symptoms and refills, explore the calendar and adherence charts, and download a PDF report. Practice records use a separate browser database and preferences namespace. The portfolio build does not connect to Firebase or create real accounts.
 
