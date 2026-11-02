@@ -4,9 +4,9 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'widgets/dosebuddy_theme.dart';
+import 'shared_care_page.dart';
 
-/// An invitation screen. Dose data remains private until cloud sync and its
-/// per-document access rules have been implemented and verified.
+/// Explicit invitations and separately stored cloud medication profiles.
 class CareCirclePage extends StatefulWidget {
   const CareCirclePage({super.key});
 
@@ -100,7 +100,7 @@ class _CareCirclePageState extends State<CareCirclePage> {
   }
 
   void _preview(List<dynamic> permissions) {
-    showDialog<void>(context:context,builder:(c)=>AlertDialog(title:const Text('Permission preview'),content:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('These permissions control what a family member could see. Sharing is not available yet.'),const SizedBox(height:12),for(final p in permissions)ListTile(contentPadding:EdgeInsets.zero,leading:const Icon(Icons.check_circle_outline,color:DoseBuddyTheme.purple),title:Text(p=='routine'?'Routine':p=='history'?'Dose history':'Missed-dose alerts')),const Text('Symptom records and photos are not included.')]),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('Close'))]));
+    showDialog<void>(context:context,builder:(c)=>AlertDialog(title:const Text('Permission preview'),content:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('Only an accepted, unexpired invitation grants access. Recording doses requires both routine and history access. Access lasts 30 days after acceptance and can be revoked earlier.'),const SizedBox(height:12),for(final p in permissions)ListTile(contentPadding:EdgeInsets.zero,leading:const Icon(Icons.check_circle_outline,color:DoseBuddyTheme.purple),title:Text(p=='routine'?'Routine':p=='history'?'Dose history':'Record and correct doses')),const Text('Symptom records and photos are not included.')]),actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('Close'))]));
   }
   Widget _invitations({required bool sent}) {
     if(DemoMode.enabled) return const Padding(padding:EdgeInsets.symmetric(vertical:12),child:Text('Invitations are unavailable in this demo.')); 
@@ -116,7 +116,9 @@ class _CareCirclePageState extends State<CareCirclePage> {
           for (final doc in snapshot.data!.docs)
             Card(child: ListTile(
               leading: const CircleAvatar(backgroundColor:DoseBuddyTheme.tint,child:Icon(Icons.person_outline,color:DoseBuddyTheme.purple)),
-              onTap:()=>_preview(doc.data()['permissions'] as List<dynamic>? ?? []),
+              onTap: doc.data()['status'] == 'accepted' && !sent
+                  ? () => Navigator.push(context, MaterialPageRoute(builder: (_) => SharedCarePage(ownerUid: doc.data()['ownerUid'] as String)))
+                  : () => _preview(doc.data()['permissions'] as List<dynamic>? ?? []),
               title: Text(sent ? doc.data()['contact'] as String? ?? 'Invitation' :
                   'Invitation from another DoseBuddy account'),
               subtitle: Text('${doc.data()['status']} · ${
@@ -147,7 +149,8 @@ class _CareCirclePageState extends State<CareCirclePage> {
     body: ListView(padding: const EdgeInsets.all(20), children: [
       const Text('You choose what to share',style:TextStyle(fontSize:20,fontWeight:FontWeight.w700)),
       const SizedBox(height:12),
-      const Card(color:DoseBuddyTheme.tint,child:ListTile(leading:Icon(Icons.info_outline,color:DoseBuddyTheme.purple),title:Text('Sharing unavailable'),subtitle:Text('Medication sharing and family alerts are not enabled yet.'))),
+      const Card(color:DoseBuddyTheme.tint,child:ListTile(leading:Icon(Icons.info_outline,color:DoseBuddyTheme.purple),title:Text('Shared medication profiles'),subtitle:Text('Publish a routine to share it. Cloud dose records are separate from private device history.'))),
+      if (!DemoMode.enabled) OutlinedButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SharedCarePage(ownerUid: _uid))), icon: const Icon(Icons.cloud_upload_outlined), label: const Text('My shared routine and records')),
       const Text('Invite someone with an existing verified DoseBuddy account. They must accept first.'),
       const SizedBox(height:16),
       const Text('Invite a family member',style:TextStyle(fontSize:18,fontWeight:FontWeight.w600)),
@@ -155,11 +158,11 @@ class _CareCirclePageState extends State<CareCirclePage> {
       TextField(controller: _contact, decoration: const InputDecoration(
         labelText: 'Their email or phone (+ country code)', border: OutlineInputBorder())),
       CheckboxListTile(title: const Text('View routine'), value: _permissions.contains('routine'),
-        onChanged: (v) => setState(() => v == true ? _permissions.add('routine') : _permissions.remove('routine'))),
+        onChanged: (v) => setState(() { if (v == true) { _permissions.add('routine'); } else { _permissions.clear(); } })),
       CheckboxListTile(title: const Text('View dose history'), value: _permissions.contains('history'),
-        onChanged: (v) => setState(() => v == true ? _permissions.add('history') : _permissions.remove('history'))),
-      CheckboxListTile(title: const Text('Receive missed-dose alerts'), value: _permissions.contains('missed_alerts'),
-        onChanged: (v) => setState(() => v == true ? _permissions.add('missed_alerts') : _permissions.remove('missed_alerts'))),
+        onChanged: (v) => setState(() { if (v == true) { _permissions.addAll({'routine', 'history'}); } else { _permissions.removeAll({'history', 'manage_doses'}); } })),
+      CheckboxListTile(title: const Text('Record and correct doses'), value: _permissions.contains('manage_doses'),
+        onChanged: (v) => setState(() { if (v == true) { _permissions.addAll({'routine', 'history', 'manage_doses'}); } else { _permissions.remove('manage_doses'); } })),
       OutlinedButton(onPressed:()=>_preview(_permissions.toList()),child:const Text('Preview requested permissions')),
       const SizedBox(height:8),
       ElevatedButton(onPressed: _busy || _permissions.isEmpty ? null : () => _call(
@@ -182,7 +185,7 @@ class _CareCirclePageState extends State<CareCirclePage> {
         TextButton(onPressed: _confirmPhone, child: const Text('Verify my number')),
       ],
       const SizedBox(height: 16),
-      const Text('Medication sharing and family alerts are not available yet.'),
+      const Text('Tap an accepted invitation to open that person’s shared profile. Revocation blocks future requests; it cannot erase information already viewed. Missed-dose push alerts are not enabled.'),
     ]),
   );
 

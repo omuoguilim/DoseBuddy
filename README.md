@@ -45,7 +45,9 @@ flutter build web --release --dart-define=PORTFOLIO_DEMO=true --base-href /demos
 
 ## What I’m still working on
 
-DoseBuddy is a development beta. I have invitation code for email and verified-phone Care Circle requests, but connected medication sharing and caregiver alerts are unfinished. I still need to deploy and test the backend permissions.
+DoseBuddy is a development beta. I added cloud shared profiles to Care Circle: an owner explicitly publishes medication names, strengths and times, and accepted caregivers can open multiple profiles from one account. Owners choose routine, history and dose-recording permissions. Shared dose changes retain correction events, detect conflicting edits and reject revoked or expired access.
+
+The shared records are separate from private Hive history. Publishing a routine does not upload private notes/photos or merge local dose records. Shared times are a published snapshot, not automatic schedule synchronization. I still need Firebase deployment and device validation before enabling this for real accounts. [Shared care setup and tests](docs/SHARED_CARE.md) describes the boundaries and deployment steps. Caregiver push alerts are not implemented.
 
 Medication records currently stay in local Hive storage without app-level encryption. Cloud recovery, full account deletion, widgets, translations and other release work are tracked in [FEATURE_STATUS.md](FEATURE_STATUS.md). A shared PDF does not confirm that a doctor received it.
 

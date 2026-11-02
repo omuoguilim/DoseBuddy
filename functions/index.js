@@ -5,7 +5,7 @@ admin.initializeApp();
 const db = admin.firestore();
 const auth = admin.auth();
 const region = 'us-east1';
-const permissions = new Set(['routine', 'history', 'missed_alerts']);
+const permissions = new Set(['routine', 'history', 'manage_doses']);
 
 async function verifiedCaller(request) {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Sign in first.');
@@ -39,7 +39,8 @@ exports.sendCareInvite = onCall({region, enforceAppCheck: true}, async (request)
   const contact = String(request.data?.contact || '').trim();
   const selected = request.data?.permissions;
   if (!Array.isArray(selected) || selected.length === 0 ||
-      selected.some((p) => !permissions.has(p))) {
+      selected.some((p) => !permissions.has(p)) || !selected.includes('routine') ||
+      (selected.includes('manage_doses') && !selected.includes('history'))) {
     throw new HttpsError('invalid-argument', 'Choose valid permissions.');
   }
   const byEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
@@ -63,7 +64,7 @@ exports.sendCareInvite = onCall({region, enforceAppCheck: true}, async (request)
   const doc = db.collection('careInvitations').doc(`${owner.uid}_${recipient.uid}`);
   await db.runTransaction(async (transaction) => {
     const previous = await transaction.get(doc);
-    if (previous.exists && (previous.data().status === 'accepted' ||
+    if (previous.exists && ((previous.data().status === 'accepted' && previous.data().accessExpiresAt?.toMillis() > Date.now()) ||
         (previous.data().status === 'pending' && previous.data().expiresAt.toMillis() > Date.now()))) {
       throw new HttpsError('already-exists', 'This person already has an invitation or access.');
     }
@@ -96,6 +97,7 @@ exports.respondToCareInvite = onCall({region, enforceAppCheck: true}, async (req
       throw new HttpsError('permission-denied', 'This invitation is unavailable.');
     }
     transaction.update(ref, {status: accept ? 'accepted' : 'declined',
+      accessExpiresAt: accept ? admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 86400000) : null,
       respondedAt: admin.firestore.FieldValue.serverTimestamp()});
   });
   return {status: accept ? 'accepted' : 'declined'};
@@ -118,3 +120,10 @@ exports.revokeCareInvite = onCall({region, enforceAppCheck: true}, async (reques
   });
   return {status: 'revoked'};
 });
+
+const sharedHandlers = require('./shared-care').handlers({
+  db, verifiedCaller, timestamp: () => admin.firestore.FieldValue.serverTimestamp(),
+});
+for (const [name, handler] of Object.entries(sharedHandlers)) {
+  exports[name] = onCall({region, enforceAppCheck: true}, handler);
+}
