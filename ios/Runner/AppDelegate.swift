@@ -11,10 +11,8 @@ import ImageIO
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    if let controller = window?.rootViewController as? FlutterViewController {
-      GeneratedPluginRegistrant.register(with: self)
-      registerOcr(messenger: controller.binaryMessenger)
-    }
+    // Plugins and the OCR channel are registered when the implicit engine is ready.
+    // Registering here as well can register the same plugin twice at launch.
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
