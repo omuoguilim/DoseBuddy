@@ -2,9 +2,20 @@
   "name": "dosebuddy-care-circle",
   "private": true,
   "main": "index.js",
-  "engines": {"node": "22"},
+  "scripts": {
+    "test": "node --test care-domain.test.js",
+    "test:emulator": "node --test --test-concurrency=1 shared-care.emulator.test.js"
+  },
+  "engines": {
+    "node": "22"
+  },
   "dependencies": {
     "firebase-admin": "^13.0.0",
     "firebase-functions": "^6.0.0"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.10.0",
+    "firebase-tools": "^13.35.1"
   }
 }

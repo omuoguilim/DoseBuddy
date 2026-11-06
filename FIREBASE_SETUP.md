@@ -11,7 +11,7 @@ This branch prepares verified email sign-in and Care Circle invitations. Do not 
 
 ## Current limits
 
-- Care Circle currently manages verified invitations only. It does **not** share medication data or send caregiver alerts. A per-user cloud data model, authorization rules, migration, and caregiver screens are still required. Do not tell users their data is shared yet.
+- Care Circle now includes explicit cloud routine publishing, multi-owner shared views and permission-limited shared dose records. See `docs/SHARED_CARE.md`. Backend deployment and phone validation are still required; caregiver alerts and automatic Hive/cloud synchronization remain unimplemented.
 - The app's legacy Hive medication box is on-device, not cloud-backed; another account is blocked from viewing it on the same installation. Uninstalling the app may lose that data. Do not treat the current implementation as backup or sync.
 - Google/Facebook sign-in buttons, prescription OCR, full account/data deletion, all notification controls, and end-to-end testing still need work before release.
 - Do not put Firebase Admin credentials or service-account keys in the app. The client Firebase configuration identifies the project; private backend credentials belong only on the server.

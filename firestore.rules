@@ -9,6 +9,11 @@ service cloud.firestore {
          resource.data.recipientUid == request.auth.uid);
       allow create, update, delete: if false;
     }
+    // Shared medication data is served by verified, App Check-protected
+    // callables. Clients cannot bypass consent/revocation with SDK reads.
+    match /careProfiles/{profileId}/{document=**} {
+      allow read, write: if false;
+    }
     match /{document=**} {
       allow read, write: if false;
     }
