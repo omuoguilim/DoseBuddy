@@ -145,6 +145,13 @@ class _CalendarPageState extends State<CalendarPage> {
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
+                  if (Navigator.of(context).canPop())
+                    const SizedBox(
+                      width: 50,
+                      height: 50,
+                      child: BackButton(color: Color(0xFF5B67CA)),
+                    )
+                  else
                   Container(
                     width: 50,
                     height: 50,

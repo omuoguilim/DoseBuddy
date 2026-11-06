@@ -21,4 +21,26 @@ void main(){
     expect(tester.takeException(),isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+  testWidgets('calendar back button returns to Today', (tester) async {
+    SharedPreferences.setMockInitialValues({'user_name': 'Oli'});
+    tester.view.physicalSize = const Size(430, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MaterialApp(
+      theme: DoseBuddyTheme.light,
+      home: const TodayPage(),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('View calendar'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BackButton), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text("Today's progress"), findsOneWidget);
+    expect(find.byType(BackButton), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }
